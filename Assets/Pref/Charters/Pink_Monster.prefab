@@ -22,7 +22,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4450652370591900419
 Transform:
   m_ObjectHideFlags: 0
@@ -126,7 +126,7 @@ Rigidbody2D:
   m_Mass: 0.35852262
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 3
+  m_GravityScale: 1
   m_Material: {fileID: 6200000, guid: a323746f3584c5a49804ce645fa9ec03, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
@@ -170,8 +170,8 @@ CapsuleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.037882328, y: -0.035514593}
-  m_Size: {x: 0.50753, y: 0.8153236}
+  m_Offset: {x: -0.064417064, y: -0.22125757}
+  m_Size: {x: 0.7728772, y: 1.4415519}
   m_Direction: 0
 --- !u!114 &7498540980756794609
 MonoBehaviour:
@@ -291,6 +291,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: af1b5bba-aa60-4290-9683-fa0c7b27c280
     m_ActionName: Player/Run[/Keyboard/leftShift]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 7498540980756794609}
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: OnJump
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: cb15fe63-2535-436f-ad49-3245b8dc0b7d
+    m_ActionName: Player/New action
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
