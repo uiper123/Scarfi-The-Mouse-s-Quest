@@ -486,7 +486,7 @@ PrefabInstance:
         type: 3}
       propertyPath: damageSound
       value: 
-      objectReference: {fileID: 8300000, guid: 91827ca86f8ff0c4b8633e4e3d47a1ff, type: 3}
+      objectReference: {fileID: 8300000, guid: ac320cfc421da6b4991c424c3e97f3ed, type: 3}
     - target: {fileID: 7498540980756794609, guid: 8d79e01054663ae4984d81aa91465605,
         type: 3}
       propertyPath: uiController
@@ -8803,9 +8803,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c56886d62a04352ba9ac04e5a54b980, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 0}
-  cloudSpeed: 0.01
-  parallaxFactor: 0.5
+  parallaxSpeed: 0.5
 --- !u!212 &607125004
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -9108,9 +9106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c56886d62a04352ba9ac04e5a54b980, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 2072153086}
-  cloudSpeed: 0.3
-  parallaxFactor: 0.5
+  parallaxSpeed: 0.5
 --- !u!1 &1241800527
 GameObject:
   m_ObjectHideFlags: 0
@@ -9156,9 +9152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c56886d62a04352ba9ac04e5a54b980, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 0}
-  cloudSpeed: 0.01
-  parallaxFactor: 0.5
+  parallaxSpeed: 0.5
 --- !u!212 &1241800530
 SpriteRenderer:
   m_ObjectHideFlags: 0
