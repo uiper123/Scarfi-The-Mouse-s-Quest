@@ -7,7 +7,7 @@ public class BackgroundMusic : MonoBehaviour
 {
     public static BackgroundMusic instance;
     public AudioSource audioSource;
-
+    
     void Awake()
     {
         if (instance == null)
@@ -45,4 +45,5 @@ public class BackgroundMusic : MonoBehaviour
             audioSource.Play();
         }
     }
+    
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.InputSystem;
 using Update = UnityEngine.PlayerLoop.Update;
 
@@ -37,12 +38,15 @@ public class PlayerController : MonoBehaviour
     public AudioClip jumpSound;
     public AudioClip runSound;
     public AudioClip damageSound;
+    public AudioClip youdie;
     private AudioSource audioSource;
     private float runSoundTimer;
     public float runSoundCooldown = 0.5f; // Время в секундах между воспроизведениями звука
 
     public UIController uiController;
-    
+
+    public GameOverPanel1 GameOverPanel;
+    [SerializeField] private GameObject playerOver;
 
     private bool _isMoving = false;
     public bool IsMoving
@@ -217,7 +221,9 @@ public class PlayerController : MonoBehaviour
     }
     private void Die()
     {
-        anim.SetTrigger("die"); // Активация анимации смерти
+        GameOverPanel.ShowGameOverMenu();
+        playerOver.SetActive(false);
+        //anim.SetTrigger("die"); // Активация анимации смерти
     }
     public void TriggerHurtAnimation()
     {
