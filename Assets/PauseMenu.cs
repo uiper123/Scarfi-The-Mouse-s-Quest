@@ -81,7 +81,7 @@ public class PauseMenu : MonoBehaviour
     public void QuitGame()
     {
         Debug.Log("Выход из игры...");
-        Application.Quit();
+        SceneManager.LoadScene("MainWindow");
     }
     public void SetMusicVolume(float volume)
     {

@@ -42,12 +42,13 @@ public class PlayerController : MonoBehaviour
     private AudioSource audioSource;
     private float runSoundTimer;
     public float runSoundCooldown = 0.5f; // Время в секундах между воспроизведениями звука
-
-    public UIController uiController;
-
-    public GameOverPanel1 GameOverPanel;
+    
+    
     [SerializeField] private GameObject playerOver;
-
+    public GameOverPanel1 GameOverPanel = GameOverPanel1.Instance;
+        // Обращение к экземпляру UIController
+    public UIController uiController = UIController.Instance;
+    
     private bool _isMoving = false;
     public bool IsMoving
     {

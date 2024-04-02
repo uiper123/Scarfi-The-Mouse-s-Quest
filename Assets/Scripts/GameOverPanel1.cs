@@ -6,7 +6,20 @@ public class GameOverPanel1 : MonoBehaviour
 {
     public GameObject gameOverMenuUI , menuButton;
     
-   
+    public static GameOverPanel1 Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // Защита от уничтожения
+        }
+        else
+        {
+            Destroy(gameObject); // Уничтожаем дубликаты
+        }
+    }
 
     // Показать меню проигрыша
     public void ShowGameOverMenu()

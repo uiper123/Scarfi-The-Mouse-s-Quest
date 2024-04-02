@@ -13,6 +13,20 @@ public class UIController : MonoBehaviour
     // Предполагается, что у вас есть доступ к скрипту персонажа, который содержит максимальные значения здоровья и стамины
     public PlayerController player;
 
+    public static UIController Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // Защита от уничтожения
+        }
+        else
+        {
+            Destroy(gameObject); // Уничтожаем дубликаты
+        }
+    }
     private void Start()
     {
         // Синхронизация максимальных значений слайдеров со значениями игрока
@@ -38,4 +52,5 @@ public class UIController : MonoBehaviour
     {
         healthSlider.value = health;
     }
+ 
 }

@@ -886,5 +886,10 @@ namespace MoreMountains.CorgiEngine
 		{
 			this.MMEventStopListening<CorgiEngineEvent>();
 		}
+
+		public class instance
+		{
+			public static int currentLevelIndex;
+		}
 	}
 }
