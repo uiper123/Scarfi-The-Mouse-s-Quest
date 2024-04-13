@@ -11,7 +11,12 @@ using Update = UnityEngine.PlayerLoop.Update;
 
 public class PlayerController : MonoBehaviour
 {
+    
+    public Item mouseRoarItem; // Ссылка на мышиный клык в инвентаре
+    
+    public static PlayerController instance = null;
     private Animator anim;
+    private Vector3 currentPosition;
     private bool isFasingRight = true;
     private Vector2 InputMove;
     [SerializeField] private float JumpPower = 4f;
@@ -25,31 +30,29 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float linearDrag = 4f;     // Линейное замедление
     [SerializeField] private float deceleration = 0.5f; // Замедление
 
+    private HelthManager hpManager;
+   
+    public float jumpAttackDamage = 10f;
     
-    public int maxHealth = 100; // Максимальное количество жизней
-    public int currentHealth; // Текущее количество жизней
     
-    
-    public float maxStamina = 100f; // Максимальное количество стамины
-    public float currentStamina; // Текущее количество стамины
-    [SerializeField] private float staminaRecoveryRate = 5f; // Скорость восстановления стамины
-    [SerializeField] private float staminaDecreasePerSecond = 10f; // Скорость уменьшения стамины в секунду
-    
-    public AudioClip jumpSound;
-    public AudioClip runSound;
-    public AudioClip damageSound;
-    public AudioClip youdie;
-    private AudioSource audioSource;
     private float runSoundTimer;
     public float runSoundCooldown = 0.5f; // Время в секундах между воспроизведениями звука
     
+    [SerializeField] private float staminaRecoveryRate = 5f; // Скорость восстановления стамины
+    [SerializeField] private float staminaDecreasePerSecond = 10f; // Скорость уменьшения стамины в секунду
+    
     
     [SerializeField] private GameObject playerOver;
-    public GameOverPanel1 GameOverPanel = GameOverPanel1.Instance;
-        // Обращение к экземпляру UIController
-    public UIController uiController = UIController.Instance;
+    // Обращение к экземпляру UIController
+    public UIController uiController;
+
+
     
+    private bool hasMouseRoarAbility = false; // Флаг, указывающий, есть ли у игрока способность мышиного рыка
+
+    private PauseMenu PauseMn;
     private bool _isMoving = false;
+    private bool _tryToRunWithoutStamina = false;
     public bool IsMoving
     {
         get { return _isMoving;}
@@ -65,12 +68,25 @@ public class PlayerController : MonoBehaviour
     private bool _isRunning = false;
     public bool IsRunning
     {
-        get { return _isRunning;}
+        get { return _isRunning; }
         private set
         { 
             _isRunning = value;
             runSoundCooldown = 0.34f;
-            anim.SetBool("run", currentStamina > 1 && value);
+
+            // Проверяем, есть ли достаточно стамины для бега
+            if (hpManager.currentStamina > 1 && value)
+            {
+                // Достаточно стамины, запускаем анимацию бега
+                anim.SetBool("run", true);
+                anim.SetBool("walk", false);
+            }
+            else
+            {
+                // Недостаточно стамины, запускаем анимацию ходьбы
+                anim.SetBool("run", false);
+                anim.SetBool("walk", true);
+            }
         }
     }
 
@@ -80,7 +96,7 @@ public class PlayerController : MonoBehaviour
         {
             if (_isMoving)
             {
-                return _isRunning && currentStamina > 1 ? walckSpeedSpeed : walckSpeed;
+                return _isRunning && hpManager.currentStamina > 1 ? walckSpeedSpeed : walckSpeed;
             }
             else
                 return 0;
@@ -91,38 +107,134 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        if (mouseRoarItem != null)
+        {
+            hasMouseRoarAbility = true;
+        }
+        else
+        {
+            hasMouseRoarAbility = false;
+        }
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (instance != this)
+        {
+            Destroy(gameObject);
+        }
+        //UI
+        uiController = UIController.Instance;
+        //Pause
+        // Получаем ссылку на компонент HelthManager
+         hpManager = GetComponent<HelthManager>();
+        
+         
         anim = GetComponent<Animator>();
         bodyPlayer = GetComponent<Rigidbody2D>();
         tch = GetComponent<ToouchingDIrection>();
-        audioSource = GetComponent<AudioSource>();
+        
         bodyPlayer.drag = linearDrag; // Установка линейного замедления
-        currentHealth = maxHealth; // Инициализация здоровья
-        currentStamina = maxStamina; // Инициализация стамины
-        uiController.SetStamina(currentStamina);
-        uiController.SetHealth(currentHealth);
+        HelthManager.currentHealth = hpManager.maxHealth; // Инициализация здоровья
+        hpManager.currentStamina = hpManager.maxStamina; // Инициализация стамины
+        uiController.SetStamina(hpManager.currentStamina);
+        uiController.SetHealth(HelthManager.currentHealth);
 
+    }
+    
+    [SerializeField] public float mouseRoarCooldown = 25f; // Время перезарядки мышиного рыка в секундах
+    public float mouseRoarCooldownTimer = 0f; // Таймер для отслеживания перезарядки мышиного рыка
+    public void UseMouseRoar(InputAction.CallbackContext context)
+    {
+        if (mouseRoarItem != null && context.started)
+        {
+            hasMouseRoarAbility = true;
+            // Проверяем, есть ли возможность использовать мышиной рык в данный момент
+            if (mouseRoarCooldownTimer <= 0)
+            {
+                // Ability is available, use it
+                MouseRoar();
+
+                // Обновляем таймер перезарядки мышиного рыка
+                mouseRoarCooldownTimer = mouseRoarCooldown;
+                //uiController.UpdateMouseRoarPanel();
+            }
+
+        }
+        
 
     }
 
     private void FixedUpdate()
     {
         float targetSpeed = InputMove.x * CurrentSpeed;
-        if (InputMove.x != 0)
-        {
-            bodyPlayer.velocity = new Vector2(Mathf.MoveTowards(bodyPlayer.velocity.x, targetSpeed, acceleration * Time.fixedDeltaTime), bodyPlayer.velocity.y);
-        }
-        else
-        {
-            // Плавное замедление до стояния
-            bodyPlayer.velocity = new Vector2(Mathf.MoveTowards(bodyPlayer.velocity.x, 0, deceleration * Time.fixedDeltaTime), bodyPlayer.velocity.y);
-        }
-        anim.SetFloat("yVelocity", bodyPlayer.velocity.y);
+            if (InputMove.x != 0)
+            {
+                bodyPlayer.velocity = new Vector2(Mathf.MoveTowards(bodyPlayer.velocity.x, targetSpeed, acceleration * Time.fixedDeltaTime), bodyPlayer.velocity.y);
+
+                // Проверяем, есть ли достаточно стамины для бега
+                if (hpManager.currentStamina > 1 && _isRunning)
+                {
+                    // Достаточно стамины, устанавливаем анимацию бега
+                    anim.SetBool("run", true);
+                    anim.SetBool("walk", false);
+
+                    // Обновляем runSoundCooldown в зависимости от текущей скорости
+                    if (Mathf.Abs(bodyPlayer.velocity.x) > 0.1f)
+                    {
+                        runSoundCooldown = 0.34f;
+                    }
+                    else
+                    {
+                        runSoundCooldown = 0.47f;
+                    }
+                }
+                else
+                {
+                    // Недостаточно стамины, устанавливаем анимацию ходьбы
+                    anim.SetBool("run", false);
+                    anim.SetBool("walk", true);
+
+                    // Обновляем runSoundCooldown в зависимости от текущей скорости
+                    if (Mathf.Abs(bodyPlayer.velocity.x) > 0.1f)
+                    {
+                        runSoundCooldown = 0.47f;
+                    }
+                    else
+                    {
+                        runSoundCooldown = 0.5f;
+                    }
+                }
+            }
+            else
+            {
+                // Плавное замедление до стояния
+                bodyPlayer.velocity = new Vector2(Mathf.MoveTowards(bodyPlayer.velocity.x, 0, deceleration * Time.fixedDeltaTime), bodyPlayer.velocity.y);
+
+                // Обновляем runSoundCooldown, когда персонаж не двигается
+                runSoundCooldown = 0.5f;
+            }
+            anim.SetFloat("yVelocity", bodyPlayer.velocity.y);
+        
     }
     
 
     private void Update()
     {
+        // Обновляем таймер перезарядки мышиного рыка
+        if (mouseRoarCooldownTimer > 0)
+        {
+            mouseRoarCooldownTimer -= Time.deltaTime;
+        }
+
         Flip();
+        
+        if (transform.position.y < LevelManagers.instance.levelBoundsMin.y)
+        {
+            // Если персонаж вышел за нижнюю границу уровня, вызываем метод GameOver у GameMG
+            GameMG.instance.GameOver();
+        }
         if (tch._isGround && bodyPlayer.velocity.y <= 0)
         {
             jumpCount = 0;
@@ -130,7 +242,7 @@ public class PlayerController : MonoBehaviour
         
         if (IsMoving && runSoundTimer <= 0 && tch.IsGround)
         {
-            audioSource.PlayOneShot(runSound);
+            AudioMG.instance.PlayPlayerSfx(0);
             runSoundTimer = runSoundCooldown; // Сброс таймера
         }
 
@@ -142,23 +254,31 @@ public class PlayerController : MonoBehaviour
         
         if (_isRunning)
         {
-            currentStamina -= staminaDecreasePerSecond * Time.deltaTime;
-            currentStamina = Mathf.Clamp(currentStamina, 0, maxStamina);
+            hpManager.currentStamina -= staminaDecreasePerSecond * Time.deltaTime;
+            hpManager.currentStamina = Mathf.Clamp(hpManager.currentStamina, 0, hpManager.maxStamina);
         }
         else
         {
             // Восстановление стамины
-            currentStamina += staminaRecoveryRate * Time.deltaTime;
-            currentStamina = Mathf.Clamp(currentStamina, 0, maxStamina);
+            hpManager.currentStamina += staminaRecoveryRate * Time.deltaTime;
+            hpManager.currentStamina = Mathf.Clamp(hpManager.currentStamina, 0, hpManager.maxStamina);
         }
-
+        
+        
         // Обновление UI стамины
-        uiController.SetStamina(currentStamina);
-        uiController.SetHealth(currentHealth);
+        currentPosition = transform.position;
+        uiController.SetStamina(hpManager.currentStamina);
+        uiController.SetHealth(HelthManager.currentHealth);
         RecoverStamina();
 
     }
 
+    
+    
+    public void SetPlayerPosition(Vector3 newPosition)
+    {
+        transform.position = newPosition;
+    }
     public void OnMove(InputAction.CallbackContext context)
     {
         InputMove = context.ReadValue<Vector2>();
@@ -167,17 +287,30 @@ public class PlayerController : MonoBehaviour
 
     public void OnRunning(InputAction.CallbackContext context)
     {
-        if (context.started)
+        if (context.started && Mathf.Abs(InputMove.x) > 0.1f)
         {
-            IsRunning = true;
+            // Проверяем, есть ли достаточно стамины для бега
+            if (hpManager.currentStamina > 1)
+            {
+                IsRunning = true;
+            }
+            else
+            {
+                // Если стамины недостаточно, устанавливаем IsRunning в false, чтобы активировалась анимация ходьбы
+                IsRunning = false;
+                // Установите флаг, чтобы отследить, что игрок пытается бежать без стамины
+                _tryToRunWithoutStamina = true;
+            }
         }
         else if (context.canceled)
         {
             IsRunning = false;
+            // Сбросьте флаг, чтобы отследить, что игрок больше не пытается бежать без стамины
+            _tryToRunWithoutStamina = false;
         }
     }
 
-   public void OnJump(InputAction.CallbackContext context)
+    public void OnJump(InputAction.CallbackContext context)
    {
        
        if (context.started)
@@ -185,8 +318,17 @@ public class PlayerController : MonoBehaviour
            if (tch._isGround || jumpCount < maxJumpCount)
            {
                jumpCount++;
-               audioSource.PlayOneShot(jumpSound);
+               AudioMG.instance.PlayPlayerSfx(1);
                bodyPlayer.velocity = new Vector2(bodyPlayer.velocity.x, JumpPower);
+
+               // Проверяем, есть ли враг под игроком
+               RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1f, LayerMask.GetMask("Enemies"));
+               if (hit.collider != null)
+               {
+                   // Наносим урон врагу при прыжке сверху
+                   
+                   hit.collider.GetComponent<EnemyScript>().TakeDamage(jumpAttackDamage);
+               }
            }
        }
        
@@ -202,35 +344,93 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public float mouseRoarRange = 5f;
+    public float mouseRoarDamage = 30f;
+    public void MouseRoar()
+    {
+        // Проверяем, доступен ли мышиный рык
+            if (hasMouseRoarAbility && Time.time >= mouseRoarCooldownTimer)
+            {
+                // Запускаем анимацию мышиного рыка
+                anim.SetTrigger("RoatGun");
+
+                // Проверяем, есть ли враги в пределах досягаемости
+                Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position, mouseRoarRange, LayerMask.GetMask("Enemies"));
+                foreach (Collider2D enemy in enemies)
+                {
+                    // Наносим урон всем найденным врагам
+                    enemy.GetComponent<EnemyScript>().TakeDamage(mouseRoarDamage);
+                }
+                hasMouseRoarAbility = false;
+                // Устанавливаем время следующего использования мышиного рыка
+                mouseRoarCooldownTimer = mouseRoarCooldown;
+            }
+
+    }
+    
+    
     private void RecoverStamina()
     {
-        if (currentStamina < maxStamina)
+        if (hpManager.currentStamina < hpManager.maxStamina)
         {
-            currentStamina += staminaRecoveryRate * Time.deltaTime;
-            currentStamina = Mathf.Clamp(currentStamina, 0, maxStamina);
+            hpManager.currentStamina += staminaRecoveryRate * Time.deltaTime;
+            hpManager.currentStamina = Mathf.Clamp(hpManager.currentStamina, 0, hpManager.maxStamina);
         }
     }
     public void TakeDamage(int damage)
     {
-        audioSource.PlayOneShot(damageSound);
-        currentHealth -= damage;
-        // Активация анимации получения урона
-        if (currentHealth <= 0)
+        AudioMG.instance.PlayPlayerSfx(2);
+        anim.SetTrigger("hurt");
+
+        // Учет брони
+        int actualDamage = Mathf.Max(0, damage - (int)(damage * (hpManager.armor / (float)hpManager.maxArmor)));
+
+        HelthManager.currentHealth -= actualDamage;
+
+        if (HelthManager.currentHealth <= 0)
         {
-            Die();
+            Die(); // Вызов метода смерти при нулевом здоровье
+        }
+        else
+        {
+            // Если здоровье не равно 0, обновляем UI
+            uiController.SetHealth(HelthManager.currentHealth);
         }
     }
     private void Die()
     {
-        GameOverPanel.ShowGameOverMenu();
-        playerOver.SetActive(false);
+        uiController.SetHealth(0);
+        GameMG.instance.GameOver();
+        PauseMn.menuButton.SetActive(false);
+
         //anim.SetTrigger("die"); // Активация анимации смерти
     }
     public void TriggerHurtAnimation()
     {
         anim.SetTrigger("hurt"); // Активация анимации получения урона
     }
-
-
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("MouseRoar")) // Замените "MouseRoarPickup" на ваш тег
+        {
+            // Игрок коснулся предмета
+            
+            mouseRoarItem = other.GetComponent<Pickup>().item; // Получите ссылку на компонент предмета
+            hasMouseRoarAbility = true; // Установите флаг, указывающий, что у игрока есть способность
+            AudioMG.instance.PlaySfx(0);
+            Destroy(other.gameObject); // Удалите объект подбора из сцены
+            // Добавьте здесь любую дополнительную логику, например, воспроизведение звука или обновление UI
+        }
+        
+        
+        if (other.CompareTag("Armor")) // Замените "Armor" на ваш тег
+        {
+            // Игрок коснулся предмета брони
+            hpManager.armor = Mathf.Min(hpManager.maxArmor, hpManager.armor + 100); // Увеличиваем броню на 10 единиц, но не более максимума
+            AudioMG.instance.PlaySfx(1);
+            Destroy(other.gameObject); // Удалите объект брони из сцены
+            // Добавьте здесь любую дополнительную логику, например, воспроизведение звука или обновление UI
+        }
+    }
+    
 }
-

@@ -7,5 +7,5 @@ PhysicsMaterial2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: "\u0410\u041D\u0442\u0438\u043B\u0438\u043F\u0443\u0447\u043A\u0430"
-  friction: 0.7
+  friction: 0
   bounciness: 0

@@ -9,6 +9,8 @@ TagManager:
   - Background
   - NoMask
   - DamageDealer
+  - MouseRoar
+  - Armor
   layers:
   - Default
   - TransparentFX

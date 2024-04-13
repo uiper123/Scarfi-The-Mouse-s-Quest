@@ -42,9 +42,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "esc",
+                    "name": "MouseRoat",
                     "type": "Button",
-                    "id": "159bc37d-5ce5-4c3a-9f54-f3380918cd49",
+                    "id": "85484030-237b-4814-bb89-c4849bc72294",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -230,12 +230,12 @@
                 },
                 {
                     "name": "",
-                    "id": "4567a743-d594-4b06-b1cb-7679bc9f7cca",
-                    "path": "<Keyboard>/escape",
+                    "id": "bb382a87-622b-47b1-a5e5-ca9f07cbf8df",
+                    "path": "<Keyboard>/f",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
-                    "action": "esc",
+                    "action": "MouseRoat",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -1,0 +1,240 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using Random = UnityEngine.Random;
+
+public class EnemyScript : MonoBehaviour
+{
+    public float health = 100f;
+    public GameObject player;
+    public Animator animator;
+    public float moveSpeed = 2f;
+    private Vector2 targetPosition;
+    private bool isMoving = true;
+    public Vector2 leftBoundaryPosition;
+    public Vector2 rightBoundaryPosition;
+    private float targetReachedTime;
+    public float minTimeToReachTarget = 2f;
+    public float maxTimeToReachTarget = 5f;
+    public float detectionRange = 5f; // Дистанция, при которой враг начинает преследовать игрока
+    public float attackRange = 1f; // Радиус зоны атаки
+    public int attackDamage = 20; // Урон от атаки
+    public float attackRate = 1f; // Скорость атаки (атак в секунду)
+    private float nextAttackTime = 0f; // Время, когда будет доступна следующая атака
+    private LayerMask groundLayer; // Слой земли
+    private bool isPlayerDetected = false;
+    
+    public AudioSource enemyAudioSource;
+    public AudioClip enemyWalkSfx;
+    public AudioClip enemyAttackSfx;
+    public AudioClip enemyHurtSfx;
+    public AudioClip enemyDeathSfx;
+    public float runSoundTimerEnemy = 0.5f;
+    
+    private void OnDrawGizmos()
+    {
+        // Рисуем линию для левой границы
+        Gizmos.DrawLine(new Vector2(leftBoundaryPosition.x, leftBoundaryPosition.y - 5f),
+            new Vector2(leftBoundaryPosition.x, leftBoundaryPosition.y + 5f));
+        // Рисуем линию для правой границы
+        Gizmos.DrawLine(new Vector2(rightBoundaryPosition.x, rightBoundaryPosition.y - 5f),
+            new Vector2(rightBoundaryPosition.x, rightBoundaryPosition.y + 5f));
+
+        // Рисуем круг для зоны обнаружения
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        float scaleX = transform.localScale.x;
+        Gizmos.DrawRay(transform.position, new Vector3(scaleX * attackRange, 0f, 0f));
+    }
+
+    private void Start()
+    {
+        groundLayer = LayerMask.GetMask("Platforms"); // Получаем слой земли
+        SetRandomTargetPosition();
+    
+        // Инициализация AudioSource для врага
+        enemyAudioSource = gameObject.AddComponent<AudioSource>();
+        enemyAudioSource.outputAudioMixerGroup = AudioMG.instance.enemyMixerGroup; // Используйте группу микшера для врагов
+    }
+
+    private void Update()
+    {
+        if (player == null)
+        {
+            FindPlayer();
+            return;
+        }
+
+        float distanceToPlayer = Vector2.Distance(transform.position, player.transform.position);
+        if (distanceToPlayer <= detectionRange)
+        {
+            isPlayerDetected = true;
+
+            if (distanceToPlayer <= attackRange)
+            {
+                Attack();
+            }
+            else
+            {
+                MoveToPlayer();
+            }
+        }
+        else
+        {
+            isPlayerDetected = false;
+        
+            // Остановка звука врага, если игрок вне поля зрения
+            enemyAudioSource.Stop();
+        
+            MoveToRandomPosition();
+        }
+        CheckHealth();
+    }
+    private void FindPlayer()
+    {
+        player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            groundLayer = LayerMask.GetMask("Platforms");
+            SetRandomTargetPosition();
+        }
+        else
+        {
+            Invoke(nameof(FindPlayer), 0.1f);
+        }
+    }
+    private void MoveToPlayer()
+    {
+        // Определение направления для поворота врага
+        if (player.transform.position.x < transform.position.x)
+        {
+            transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+        }
+        else
+        {
+            transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+        }
+
+        // Проверяем, есть ли земля под ногами врага
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1f, groundLayer);
+        if (hit.collider != null)
+        {
+            // Перемещение врага только по оси X
+            float step = moveSpeed * Time.deltaTime;
+            float newX = Mathf.MoveTowards(transform.position.x, player.transform.position.x, step);
+            transform.position = new Vector3(newX, transform.position.y, transform.position.z);
+        }
+    }
+
+    private void MoveToRandomPosition()
+    {
+        // Определение направления для поворота врага
+        if (targetPosition.x < transform.position.x)
+        {
+            transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+        }
+        else
+        {
+            transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+        }
+
+        // Проверяем, есть ли земля под ногами врага
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1f, groundLayer);
+        if (hit.collider != null)
+        {
+            // Перемещение врага только по оси X
+            float step = moveSpeed * Time.deltaTime;
+            float newX = Mathf.MoveTowards(transform.position.x, targetPosition.x, step);
+            transform.position = new Vector3(newX, transform.position.y, transform.position.z);
+
+            // Воспроизведение звука ходьбы врага
+            if (!enemyAudioSource.isPlaying || enemyAudioSource.clip != enemyWalkSfx && runSoundTimerEnemy <= 0)
+            {
+                enemyAudioSource.clip = enemyWalkSfx;
+                enemyAudioSource.Play();
+            }
+
+            // Проверяем, достиг ли враг целевой позиции
+            if (Mathf.Abs(transform.position.x - targetPosition.x) < 0.1f)
+            {
+                SetRandomTargetPosition();
+            }
+        }
+    }
+
+    private void SetRandomTargetPosition()
+    {
+        targetPosition = new Vector2(Random.Range(leftBoundaryPosition.x, rightBoundaryPosition.x),
+            transform.position.y);
+        isMoving = true;
+        animator.SetBool("_isMovingEnem", true);
+    }
+
+    public void TakeDamage(float amount)
+    {
+        health -= amount;
+        if (health <= 0)
+        {
+            Die();
+        }
+        else
+        {
+            // Воспроизведение звука получения урона врагом
+            if (!enemyAudioSource.isPlaying || enemyAudioSource.clip != enemyHurtSfx)
+            {
+                enemyAudioSource.clip = enemyHurtSfx;
+                enemyAudioSource.Play();
+            }
+        }
+    }
+
+    private void Die()
+    {
+        if (!enemyAudioSource.isPlaying || enemyAudioSource.clip != enemyDeathSfx)
+        {
+            enemyAudioSource.clip = enemyDeathSfx;
+            enemyAudioSource.Play();
+        }
+    
+        Destroy(gameObject);
+    }
+
+    private void CheckHealth()
+    {
+        if (health <= 0)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void Attack()
+    {
+        if (Time.time >= nextAttackTime)
+        {
+            // Запускаем анимацию атаки
+            animator.SetTrigger("_isattackEnem");
+            
+            if (!enemyAudioSource.isPlaying || enemyAudioSource.clip != enemyAttackSfx)
+            {
+                enemyAudioSource.clip = enemyAttackSfx;
+                enemyAudioSource.Play();
+            }
+            // Проверяем, есть ли игрок в пределах досягаемости
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, new Vector2(transform.localScale.x, 0f) * attackRange, attackRange, LayerMask.GetMask("Player"));
+            if (hit.collider != null)
+            {
+                // Игрок найден, наносим урон
+                hit.collider.GetComponent<PlayerController>().TakeDamage(attackDamage);
+            }
+
+            nextAttackTime = Time.time + 1f / attackRate;
+        }
+    }
+}
