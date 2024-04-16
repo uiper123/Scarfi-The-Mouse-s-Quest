@@ -7,7 +7,13 @@ public class HelthManager : MonoBehaviour
     
     
     public int maxHealth = 100; // Максимальное количество жизней
-    public static float currentHealth; // Текущее количество жизней
+    public static float currentHealth; 
+
+    public static void SetCurrentHealth(float health)
+    {
+        currentHealth = health;
+    }
+    // Текущее количество жизней
     
     
     public float maxStamina = 100f; // Максимальное количество стамины

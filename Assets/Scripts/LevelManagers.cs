@@ -69,6 +69,24 @@ public class LevelManagers : MonoBehaviour
             {
                 Debug.LogError("Player prefab is not assigned. Please assign it in the Inspector.");
             }
+
+            SaveData data = SaveSystem.LoadProgress();
+            if (data != null)
+            {
+                // Загружаем уровень, если он был сохранен
+                if (data.level != SceneManager.GetActiveScene().buildIndex)
+                {
+                    SceneManager.LoadScene(data.level);
+                    return; // Выходим из метода, чтобы избежать повторного спавна игрока
+                }
+
+                // Устанавливаем позицию игрока
+                currentPlayerInstance.transform.position = data.playerPosition;
+                // Устанавливаем остальные данные игрока (здоровье, выносливость, броню и т.д.)
+                //currentPlayerInstance.GetComponent<HelthManager>().currentHealth = data.currentHealth;
+                currentPlayerInstance.GetComponent<HelthManager>().currentStamina = data.currentStamina;
+                currentPlayerInstance.GetComponent<HelthManager>().armor = data.armor;
+            }
         }
     }
 
@@ -86,8 +104,19 @@ public class LevelManagers : MonoBehaviour
     }
     public void SaveCheckpoint(int index)
     {
-        PlayerPrefs.SetInt("CheckpointIndex", index);
-        PlayerPrefs.SetString("SceneName", SceneManager.GetActiveScene().name);
+        SaveData data = new SaveData();
+        data.playerPosition = currentPlayerInstance.transform.position;
+        data.level = SceneManager.GetActiveScene().buildIndex;
+
+        HelthManager healthManager = currentPlayerInstance.GetComponent<HelthManager>(); 
+        data.maxHealth = healthManager.maxHealth; // Assuming currentHealth is static
+        data.currentStamina = healthManager.currentStamina;
+        //data.currentHealth = healthManager.currentHealth; 
+        data.armor = healthManager.armor;
+
+        // ... (save other data) ...
+
+        SaveSystem.SaveProgress(data);
     }
     public void SetCurrentCheckpoint(int index)
     {

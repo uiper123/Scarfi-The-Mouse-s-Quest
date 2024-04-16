@@ -80,6 +80,7 @@ public class PauseMenu : MonoBehaviour
         Reatgun.SetActive(true); // Показываем способность мышиного рыка
         Time.timeScale = 1f;
         isPaused = false;
+        UIController.isPaused = false;
     }
 
     // Пауза игры
@@ -88,8 +89,10 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 0f;
         pauseMenuUI.SetActive(true);
         menuButton.SetActive(false);
-        Reatgun.SetActive(false); // Скрываем способность мышиного рыка
+        Reatgun.SetActive(false);
+        // Скрываем способность мышиного рыка
         isPaused = true;
+        UIController.isPaused = true;
     }
 
     // Выход из игры
@@ -98,7 +101,6 @@ public class PauseMenu : MonoBehaviour
         Debug.Log("Выход из игры...");
         pauseMenuUI.SetActive(false);
         menuButton.SetActive(true);
-        Reatgun.SetActive(true);
         AudioMG.instance.StopMusic();
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainWindow");

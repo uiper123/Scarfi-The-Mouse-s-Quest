@@ -382,8 +382,9 @@ public class PlayerController : MonoBehaviour
         AudioMG.instance.PlayPlayerSfx(2);
         anim.SetTrigger("hurt");
 
-        // Учет брони
-        int actualDamage = Mathf.Max(0, damage - (int)(damage * (hpManager.armor / (float)hpManager.maxArmor)));
+        // Рассчитываем фактический урон с учетом брони
+        float armorPercentage = (float)hpManager.armor / hpManager.maxArmor;
+        int actualDamage = Mathf.RoundToInt(damage * (1f - armorPercentage));
 
         HelthManager.currentHealth -= actualDamage;
 
@@ -395,6 +396,7 @@ public class PlayerController : MonoBehaviour
         {
             // Если здоровье не равно 0, обновляем UI
             uiController.SetHealth(HelthManager.currentHealth);
+            uiController.UpdateArmor(); // Обновляем UI брони
         }
     }
     private void Die()

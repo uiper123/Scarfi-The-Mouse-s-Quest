@@ -1676,7 +1676,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.7529412}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2944,13 +2944,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 857e0397b7f74924eacb344e70da9c1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mouseRoarPanel: {fileID: 0}
-  mouseRoarCooldownText: {fileID: 0}
+  mouseRoarPanel: {fileID: 4829246693685252414}
+  mouseRoarCooldownText: {fileID: 1683300314813895774}
   staminaSlider: {fileID: 4153256808155796142}
   healthSlider: {fileID: 7214253363081174311}
-  armorSlider: {fileID: 0}
-  hpManager: {fileID: 0}
-  player: {fileID: 0}
+  armorSlider: {fileID: 4642838213583143183}
+  hpManager: {fileID: 8337273528241236240, guid: 1d4a6ce5b379b1741ae235bd47b9bd22,
+    type: 3}
+  player: {fileID: 8202866731090987886, guid: 1d4a6ce5b379b1741ae235bd47b9bd22, type: 3}
 --- !u!114 &5327620897553481577
 MonoBehaviour:
   m_ObjectHideFlags: 0

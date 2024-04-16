@@ -54,14 +54,18 @@ MonoBehaviour:
     type: 2}
   musicSource: {fileID: 5552266560085665787}
   sfxSources: []
+  sfxClips:
+  - {fileID: 8300000, guid: 48f9d51f49c3b404c9abf512372940cf, type: 3}
   playerSfxSources: []
   sceneMusicClips:
   - {fileID: 8300000, guid: e7d0d4ddaf8ac4845998df1feecceaa7, type: 3}
-  - {fileID: 8300000, guid: 133862382fd703447b8c917c57620b27, type: 3}
+  - {fileID: 8300000, guid: 46b693faf1547314bad29a83cb4beeea, type: 3}
   playerSfx:
   - {fileID: 8300000, guid: ee0c9e1bb6793654e9a01ce30c6c2e9d, type: 3}
   - {fileID: 8300000, guid: 10529216ae6632a45a2ade1ca8f87633, type: 3}
   - {fileID: 8300000, guid: fc6a8ed8f767ee7449dc2f51593060a7, type: 3}
+  enemyMixerGroup: {fileID: 0}
+  EnemySfx: {fileID: 0}
 --- !u!82 &5552266560085665787
 AudioSource:
   m_ObjectHideFlags: 0

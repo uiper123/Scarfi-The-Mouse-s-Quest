@@ -14,6 +14,10 @@ public class UIController : MonoBehaviour
     public Slider healthSlider;
     public Slider armorSlider;
     public HelthManager hpManager;
+    public static bool isPaused = false;
+    
+    
+    private bool hasArmor = false;
 
     // Предполагается, что у вас есть доступ к скрипту персонажа, который содержит максимальные значения здоровья и стамины
     public PlayerController player;
@@ -47,9 +51,18 @@ public class UIController : MonoBehaviour
         healthSlider.maxValue = hpManager.maxHealth;
         healthSlider.value = HelthManager.currentHealth;
         // Синхронизация максимальных значений слайдеров со значениями игрока
-        armorSlider.maxValue = hpManager.maxArmor;
-        armorSlider.value = hpManager.armor;
-        
+        if (hpManager.armor > 0)
+        {
+            hasArmor = true;
+            armorSlider.gameObject.SetActive(true);
+            armorSlider.maxValue = hpManager.maxArmor;
+            armorSlider.value = hpManager.armor;
+        }
+        else
+        {
+            hasArmor = false;
+            armorSlider.gameObject.SetActive(false);
+        }
         UpdateMouseRoarPanel();
         UpdateArmor();
     }
@@ -72,38 +85,56 @@ public class UIController : MonoBehaviour
     {
         healthSlider.value = health;
     }
-    private void UpdateArmor()
+    public void UpdateArmor()
     {
-        armorSlider.value = hpManager.armor;
+        if (hpManager.armor > 0)
+        {
+            hasArmor = true;
+            armorSlider.gameObject.SetActive(true);
+            armorSlider.value = hpManager.armor;
+        }
+        else
+        {
+            hasArmor = false;
+            armorSlider.gameObject.SetActive(false);
+        }
     }
     public void UpdateMouseRoarPanel()
     {
-        if (playerController.mouseRoarItem != null)
+        if (!isPaused)
         {
-            // Мышиный рык доступен в инвентаре
-            mouseRoarPanel.SetActive(true);
-
-            // Получаем оставшееся время перезарядки из скрипта PlayerController
-            float remainingCooldown = playerController.mouseRoarCooldownTimer;
-
-            // Проверяем, активен ли перезарядочный таймер
-            if (remainingCooldown <= 0)
+            if (playerController.mouseRoarItem != null)
             {
-                // Перезарядка завершена, показываем изображение и скрываем текст
-                mouseRoarCooldownText.gameObject.SetActive(false);
-                mouseRoarPanel.GetComponent<Image>().color = Color.white;
+                // Мышиный рык доступен в инвентаре
+                mouseRoarPanel.SetActive(true);
+
+                // Получаем оставшееся время перезарядки из скрипта PlayerController
+                float remainingCooldown = playerController.mouseRoarCooldownTimer;
+
+                // Проверяем, активен ли перезарядочный таймер
+                if (remainingCooldown <= 0)
+                {
+                    // Перезарядка завершена, показываем изображение и скрываем текст
+                    mouseRoarCooldownText.gameObject.SetActive(false);
+                    mouseRoarPanel.GetComponent<Image>().color = Color.white;
+                }
+                else
+                {
+                    // Перезарядка активна, показываем текст и обновляем отсчет
+                    mouseRoarCooldownText.gameObject.SetActive(true);
+                    mouseRoarCooldownText.text = Mathf.CeilToInt(remainingCooldown).ToString();
+                    mouseRoarPanel.GetComponent<Image>().color = Color.red;
+                }
             }
             else
             {
-                // Перезарядка активна, показываем текст и обновляем отсчет
-                mouseRoarCooldownText.gameObject.SetActive(true);
-                mouseRoarCooldownText.text = Mathf.CeilToInt(remainingCooldown).ToString();
-                mouseRoarPanel.GetComponent<Image>().color = Color.red;
+                // Мышиный рык недоступен в инвентаре
+                mouseRoarPanel.SetActive(false);
             }
         }
         else
         {
-            // Мышиный рык недоступен в инвентаре
+            // Игра на паузе, скрываем панель мышиного рыка
             mouseRoarPanel.SetActive(false);
         }
     }
