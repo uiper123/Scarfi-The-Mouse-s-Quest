@@ -26,7 +26,8 @@ public class GameMG : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
+    public GameObject Reatgun;
+    public GameObject menuButton;
     public void GameOver()
     {
         if (PlayerController.instance != null)
@@ -35,6 +36,8 @@ public class GameMG : MonoBehaviour
             Destroy(PlayerController.instance.gameObject);
         }
         gameOverMenuUI.SetActive(true);
+        menuButton.SetActive(false);
+        Reatgun.gameObject.SetActive(false);// Отключаем отображение Reatgun
         Time.timeScale = 0;
     }
 
@@ -42,11 +45,13 @@ public class GameMG : MonoBehaviour
     {
         Time.timeScale = 1f;
         gameOverMenuUI.SetActive(false);
+        menuButton.SetActive(true);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         // Сбрасываем текущий чекпоинт, чтобы при перезапуске уровня персонаж появлялся на начальной позиции
         currentCheckpointIndex = 0;
         // Также обнуляем объект персонажа, чтобы при перезапуске уровня не оставался ненужный объект персонажа в памяти
         PlayerController.instance = null;
+        LevelManagers.instance.SpawnPlayer(); // Добавьте этот вызов
     }
 
     public void QuitGame()
@@ -55,45 +60,8 @@ public class GameMG : MonoBehaviour
         Debug.Log("Выход из игры...");
         SceneManager.LoadScene("MainWindow");
     }
-
-    public void SetCurrentCheckpoint(int index)
-    {
-        currentCheckpointIndex = index;
-    }
     
-    // Метод для установки переменной hasCheckpoint
-    public void SetHasCheckpoint(bool value)
-    {
-        hasCheckpoint = value;
-    }
     
-    public void LoadCheckpoint()
-    {
-        // Загрузка чекпоинта
-        LevelManagers.instance.LoadCheckpoint();
-        // Закрыть главное меню
-        _pausemenu.pauseMenuUI.SetActive(false);
-        // Продолжить игру
-        Time.timeScale = 1f;
-    }
-    
-    public void OpenMainMenu()
-    {
-        // Проверяем наличие сохранения
-        if (hasCheckpoint)
-        {
-            // Если есть сохранение, показываем кнопку загрузки чекпоинта
-            loadCheckpointButton.SetActive(true);
-        }
-        else
-        {
-            // Если сохранения нет, скрываем кнопку загрузки чекпоинта
-            loadCheckpointButton.SetActive(false);
-        }
-
-        // Открываем главное меню
-        _pausemenu.pauseMenuUI.SetActive(true);
-    }
     private void OnEnable()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -107,15 +75,18 @@ public class GameMG : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         // Проверяем, является ли загруженная сцена игровой сценой
-        if (scene.buildIndex != 0) // Предполагается, что основное меню имеет индекс 0
-        {
-            // При загрузке игровой сцены сбрасываем текущий чекпоинт
-            currentCheckpointIndex = 0;
-        }
+            if (scene.buildIndex != 0) // Предполагается, что основное меню имеет индекс 0
+            {
+                // При загрузке игровой сцены вызываем SpawnPlayer()
+                LevelManagers.instance.SpawnPlayer();
+            }
     }
     
     public void ContinueGame()
     {
+        // Вызываем SpawnPlayer() в начале метода
+        LevelManagers.instance.SpawnPlayer();
+
         // Проверяем наличие сохраненного чекпоинта
         if (PlayerPrefs.HasKey("CheckpointIndex") && PlayerPrefs.HasKey("SceneName"))
         {

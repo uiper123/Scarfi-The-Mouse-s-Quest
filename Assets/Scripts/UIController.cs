@@ -15,13 +15,16 @@ public class UIController : MonoBehaviour
     public Slider armorSlider;
     public HelthManager hpManager;
     public static bool isPaused = false;
-    
-    
+   
     private bool hasArmor = false;
 
     // Предполагается, что у вас есть доступ к скрипту персонажа, который содержит максимальные значения здоровья и стамины
     public PlayerController player;
 
+    
+ 
+    
+    
     public static UIController Instance { get; private set; }
 
     private void Awake()

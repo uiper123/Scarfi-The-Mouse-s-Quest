@@ -461,6 +461,8 @@ MonoBehaviour:
   staminaDecreasePerSecond: 25
   playerOver: {fileID: 5864138272898439719}
   uiController: {fileID: 0}
+  knockbackForce: 5
+  knockbackDuration: 0.2
   bodyPlayer: {fileID: 6626550440617607707}
   mouseRoarCooldown: 15
   mouseRoarCooldownTimer: 0

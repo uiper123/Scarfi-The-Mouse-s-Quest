@@ -24,6 +24,7 @@ public class LevelManagers : MonoBehaviour
         {
             instance = this;
         }
+        
         else if (instance != this)
         {
             Destroy(gameObject);
@@ -33,10 +34,11 @@ public class LevelManagers : MonoBehaviour
     void Start()
     {
         // Проверяем, находимся ли мы в главном меню
-        if (!SceneManager.GetActiveScene().name.Equals("MainWindow"))
+        if (SceneManager.GetActiveScene().name != "MainWindow" && currentPlayerInstance == null)
         {
             SpawnPlayer();
         }
+    
     }
 
     public void SpawnPlayer()
@@ -49,9 +51,15 @@ public class LevelManagers : MonoBehaviour
             {
                 spawnPosition = checkpointPositions[currentCheckpointIndex].position;
             }
-            else
+            else if (startMarker != null) // Добавьте проверку на null
             {
                 spawnPosition = startMarker.position;
+            }
+            else
+            {
+                // Если startMarker равен null, выполните какие-то действия по умолчанию
+                Debug.LogError("startMarker is null. Please assign a valid Transform in the Inspector.");
+                return;
             }
 
             // Уничтожаем предыдущий объект персонажа, если он существует
@@ -85,7 +93,7 @@ public class LevelManagers : MonoBehaviour
                 // Устанавливаем остальные данные игрока (здоровье, выносливость, броню и т.д.)
                 //currentPlayerInstance.GetComponent<HelthManager>().currentHealth = data.currentHealth;
                 currentPlayerInstance.GetComponent<HelthManager>().currentStamina = data.currentStamina;
-                currentPlayerInstance.GetComponent<HelthManager>().armor = data.armor;
+                currentPlayerInstance.GetComponent<HelthManager>().armor = (int)data.armor;
             }
         }
     }
@@ -100,6 +108,19 @@ public class LevelManagers : MonoBehaviour
         {
             // Устанавливаем позицию игрока на последний чекпоинт
             PlayerController.instance.SetPlayerPosition(checkpointPositions[currentCheckpointIndex].position);
+
+            // Восстанавливаем данные игрока из сохраненного чекпоина
+            SaveData data = SaveSystem.LoadProgress();
+            if (data != null)
+            {
+                // Устанавливаем здоровье, выносливость и броню игрока
+                //currentPlayerInstance.GetComponent<HelthManager>().currentHealth = data.currentHealth;
+                currentPlayerInstance.GetComponent<HelthManager>().currentStamina = data.currentStamina;
+                currentPlayerInstance.GetComponent<HelthManager>().armor = (int)data.armor;
+
+                // Восстанавливаем время перезарядки мышиного рыка
+                PlayerController.instance.mouseRoarCooldownTimer = data.mouseRoarCooldown;
+            }
         }
     }
     public void SaveCheckpoint(int index)
@@ -108,13 +129,16 @@ public class LevelManagers : MonoBehaviour
         data.playerPosition = currentPlayerInstance.transform.position;
         data.level = SceneManager.GetActiveScene().buildIndex;
 
-        HelthManager healthManager = currentPlayerInstance.GetComponent<HelthManager>(); 
-        data.maxHealth = healthManager.maxHealth; // Assuming currentHealth is static
+        HelthManager healthManager = currentPlayerInstance.GetComponent<HelthManager>();
+        data.maxHealth = healthManager.maxHealth;
+        //data.currentHealth = healthManager.currentHealth;
         data.currentStamina = healthManager.currentStamina;
-        //data.currentHealth = healthManager.currentHealth; 
-        data.armor = healthManager.armor;
+        //data.armor = healthManager.armor;
 
-        // ... (save other data) ...
+        data.currentCheckpointIndex = index;
+
+        // Сохраняем время перезарядки мышиного рыка
+        data.mouseRoarCooldown = PlayerController.instance.mouseRoarCooldownTimer;
 
         SaveSystem.SaveProgress(data);
     }

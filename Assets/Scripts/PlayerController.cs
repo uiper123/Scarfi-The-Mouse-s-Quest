@@ -11,9 +11,9 @@ using Update = UnityEngine.PlayerLoop.Update;
 
 public class PlayerController : MonoBehaviour
 {
-    
+
     public Item mouseRoarItem; // Ссылка на мышиный клык в инвентаре
-    
+
     public static PlayerController instance = null;
     private Animator anim;
     private Vector3 currentPosition;
@@ -25,37 +25,44 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float walckSpeed = 5f;
     [SerializeField] private float walckSpeedSpeed = 10f;
     private ToouchingDIrection tch;
-    
+
     [SerializeField] private float acceleration = 1.5f; // Ускорение
-    [SerializeField] private float linearDrag = 4f;     // Линейное замедление
+    [SerializeField] private float linearDrag = 4f; // Линейное замедление
     [SerializeField] private float deceleration = 0.5f; // Замедление
 
     private HelthManager hpManager;
-   
+
     public float jumpAttackDamage = 10f;
-    
-    
+
+
     private float runSoundTimer;
     public float runSoundCooldown = 0.5f; // Время в секундах между воспроизведениями звука
-    
+
     [SerializeField] private float staminaRecoveryRate = 5f; // Скорость восстановления стамины
     [SerializeField] private float staminaDecreasePerSecond = 10f; // Скорость уменьшения стамины в секунду
-    
-    
+
+
     [SerializeField] private GameObject playerOver;
+
     // Обращение к экземпляру UIController
     public UIController uiController;
 
 
-    
+    public float knockbackForce = 5f; // Сила отбрасывания
+    public float knockbackDuration = 0.2f; // Длительность отбрасывания
+    private bool isKnockedBack = false; // Флаг, указывающий на отбрасывание
+    private float knockbackTimer = 0f; // Таймер отбрасывания
+
+
     private bool hasMouseRoarAbility = false; // Флаг, указывающий, есть ли у игрока способность мышиного рыка
 
     private PauseMenu PauseMn;
     private bool _isMoving = false;
     private bool _tryToRunWithoutStamina = false;
+
     public bool IsMoving
     {
-        get { return _isMoving;}
+        get { return _isMoving; }
         private set
         {
             _isMoving = value;
@@ -66,11 +73,12 @@ public class PlayerController : MonoBehaviour
     }
 
     private bool _isRunning = false;
+
     public bool IsRunning
     {
         get { return _isRunning; }
         private set
-        { 
+        {
             _isRunning = value;
             runSoundCooldown = 0.34f;
 
@@ -103,7 +111,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    [SerializeField] private Rigidbody2D bodyPlayer;
+    [SerializeField] public Rigidbody2D bodyPlayer;
 
     private void Awake()
     {
@@ -115,6 +123,7 @@ public class PlayerController : MonoBehaviour
         {
             hasMouseRoarAbility = false;
         }
+
         if (instance == null)
         {
             instance = this;
@@ -124,17 +133,18 @@ public class PlayerController : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
         //UI
         uiController = UIController.Instance;
         //Pause
         // Получаем ссылку на компонент HelthManager
-         hpManager = GetComponent<HelthManager>();
-        
-         
+        hpManager = GetComponent<HelthManager>();
+
+
         anim = GetComponent<Animator>();
         bodyPlayer = GetComponent<Rigidbody2D>();
         tch = GetComponent<ToouchingDIrection>();
-        
+
         bodyPlayer.drag = linearDrag; // Установка линейного замедления
         HelthManager.currentHealth = hpManager.maxHealth; // Инициализация здоровья
         hpManager.currentStamina = hpManager.maxStamina; // Инициализация стамины
@@ -142,9 +152,10 @@ public class PlayerController : MonoBehaviour
         uiController.SetHealth(HelthManager.currentHealth);
 
     }
-    
+
     [SerializeField] public float mouseRoarCooldown = 25f; // Время перезарядки мышиного рыка в секундах
     public float mouseRoarCooldownTimer = 0f; // Таймер для отслеживания перезарядки мышиного рыка
+
     public void UseMouseRoar(InputAction.CallbackContext context)
     {
         if (mouseRoarItem != null && context.started)
@@ -162,63 +173,68 @@ public class PlayerController : MonoBehaviour
             }
 
         }
-        
+
 
     }
 
     private void FixedUpdate()
     {
         float targetSpeed = InputMove.x * CurrentSpeed;
-            if (InputMove.x != 0)
+        if (InputMove.x != 0)
+        {
+            bodyPlayer.velocity =
+                new Vector2(Mathf.MoveTowards(bodyPlayer.velocity.x, targetSpeed, acceleration * Time.fixedDeltaTime),
+                    bodyPlayer.velocity.y);
+
+            // Проверяем, есть ли достаточно стамины для бега
+            if (hpManager.currentStamina > 1 && _isRunning)
             {
-                bodyPlayer.velocity = new Vector2(Mathf.MoveTowards(bodyPlayer.velocity.x, targetSpeed, acceleration * Time.fixedDeltaTime), bodyPlayer.velocity.y);
+                // Достаточно стамины, устанавливаем анимацию бега
+                anim.SetBool("run", true);
+                anim.SetBool("walk", false);
 
-                // Проверяем, есть ли достаточно стамины для бега
-                if (hpManager.currentStamina > 1 && _isRunning)
+                // Обновляем runSoundCooldown в зависимости от текущей скорости
+                if (Mathf.Abs(bodyPlayer.velocity.x) > 0.1f)
                 {
-                    // Достаточно стамины, устанавливаем анимацию бега
-                    anim.SetBool("run", true);
-                    anim.SetBool("walk", false);
-
-                    // Обновляем runSoundCooldown в зависимости от текущей скорости
-                    if (Mathf.Abs(bodyPlayer.velocity.x) > 0.1f)
-                    {
-                        runSoundCooldown = 0.34f;
-                    }
-                    else
-                    {
-                        runSoundCooldown = 0.47f;
-                    }
+                    runSoundCooldown = 0.34f;
                 }
                 else
                 {
-                    // Недостаточно стамины, устанавливаем анимацию ходьбы
-                    anim.SetBool("run", false);
-                    anim.SetBool("walk", true);
-
-                    // Обновляем runSoundCooldown в зависимости от текущей скорости
-                    if (Mathf.Abs(bodyPlayer.velocity.x) > 0.1f)
-                    {
-                        runSoundCooldown = 0.47f;
-                    }
-                    else
-                    {
-                        runSoundCooldown = 0.5f;
-                    }
+                    runSoundCooldown = 0.47f;
                 }
             }
             else
             {
-                // Плавное замедление до стояния
-                bodyPlayer.velocity = new Vector2(Mathf.MoveTowards(bodyPlayer.velocity.x, 0, deceleration * Time.fixedDeltaTime), bodyPlayer.velocity.y);
+                // Недостаточно стамины, устанавливаем анимацию ходьбы
+                anim.SetBool("run", false);
+                anim.SetBool("walk", true);
 
-                // Обновляем runSoundCooldown, когда персонаж не двигается
-                runSoundCooldown = 0.5f;
+                // Обновляем runSoundCooldown в зависимости от текущей скорости
+                if (Mathf.Abs(bodyPlayer.velocity.x) > 0.1f)
+                {
+                    runSoundCooldown = 0.47f;
+                }
+                else
+                {
+                    runSoundCooldown = 0.5f;
+                }
             }
-            anim.SetFloat("yVelocity", bodyPlayer.velocity.y);
-        
+        }
+        else
+        {
+            // Плавное замедление до стояния
+            bodyPlayer.velocity =
+                new Vector2(Mathf.MoveTowards(bodyPlayer.velocity.x, 0, deceleration * Time.fixedDeltaTime),
+                    bodyPlayer.velocity.y);
+
+            // Обновляем runSoundCooldown, когда персонаж не двигается
+            runSoundCooldown = 0.5f;
+        }
+
+        anim.SetFloat("yVelocity", bodyPlayer.velocity.y);
+
     }
-    
+
 
     private void Update()
     {
@@ -229,17 +245,18 @@ public class PlayerController : MonoBehaviour
         }
 
         Flip();
-        
+
         if (transform.position.y < LevelManagers.instance.levelBoundsMin.y)
         {
             // Если персонаж вышел за нижнюю границу уровня, вызываем метод GameOver у GameMG
             GameMG.instance.GameOver();
         }
+
         if (tch._isGround && bodyPlayer.velocity.y <= 0)
         {
             jumpCount = 0;
         }
-        
+
         if (IsMoving && runSoundTimer <= 0 && tch.IsGround)
         {
             AudioMG.instance.PlayPlayerSfx(0);
@@ -251,7 +268,7 @@ public class PlayerController : MonoBehaviour
         {
             runSoundTimer -= Time.deltaTime;
         }
-        
+
         if (_isRunning)
         {
             hpManager.currentStamina -= staminaDecreasePerSecond * Time.deltaTime;
@@ -263,8 +280,16 @@ public class PlayerController : MonoBehaviour
             hpManager.currentStamina += staminaRecoveryRate * Time.deltaTime;
             hpManager.currentStamina = Mathf.Clamp(hpManager.currentStamina, 0, hpManager.maxStamina);
         }
-        
-        
+
+        if (isKnockedBack)
+        {
+            knockbackTimer -= Time.deltaTime;
+            if (knockbackTimer <= 0)
+            {
+                isKnockedBack = false;
+            }
+        }
+
         // Обновление UI стамины
         currentPosition = transform.position;
         uiController.SetStamina(hpManager.currentStamina);
@@ -273,12 +298,29 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    
-    
+
+    public void Knockback(Vector2 direction)
+    {
+        isKnockedBack = true;
+        knockbackTimer = knockbackDuration;
+        bodyPlayer.velocity = direction * knockbackForce;
+
+    }
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Enemies"))
+        {
+            EnemyScript enemy = collision.gameObject.GetComponent<EnemyScript>();
+            Vector2 knockbackDirection = (transform.position - collision.gameObject.transform.position).normalized;
+            Knockback(knockbackDirection);
+        }
+    }
+
     public void SetPlayerPosition(Vector3 newPosition)
     {
         transform.position = newPosition;
     }
+
     public void OnMove(InputAction.CallbackContext context)
     {
         InputMove = context.ReadValue<Vector2>();
@@ -311,28 +353,30 @@ public class PlayerController : MonoBehaviour
     }
 
     public void OnJump(InputAction.CallbackContext context)
-   {
-       
-       if (context.started)
-       {
-           if (tch._isGround || jumpCount < maxJumpCount)
-           {
-               jumpCount++;
-               AudioMG.instance.PlayPlayerSfx(1);
-               bodyPlayer.velocity = new Vector2(bodyPlayer.velocity.x, JumpPower);
+    {
 
-               // Проверяем, есть ли враг под игроком
-               RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1f, LayerMask.GetMask("Enemies"));
-               if (hit.collider != null)
-               {
-                   // Наносим урон врагу при прыжке сверху
-                   
-                   hit.collider.GetComponent<EnemyScript>().TakeDamage(jumpAttackDamage);
-               }
-           }
-       }
-       
-   }
+        if (context.started)
+        {
+            if (tch._isGround || jumpCount < maxJumpCount)
+            {
+                jumpCount++;
+                AudioMG.instance.PlayPlayerSfx(1);
+                bodyPlayer.velocity = new Vector2(bodyPlayer.velocity.x, JumpPower);
+
+                // Проверяем, есть ли враг под игроком
+                RaycastHit2D hit =
+                    Physics2D.Raycast(transform.position, Vector2.down, 1f, LayerMask.GetMask("Enemies"));
+                if (hit.collider != null)
+                {
+                    // Наносим урон врагу при прыжке сверху
+
+                    hit.collider.GetComponent<EnemyScript>().TakeDamage(jumpAttackDamage);
+                }
+            }
+        }
+
+    }
+
     private void Flip()
     {
         if ((isFasingRight && InputMove.x < 0f) || (!isFasingRight && InputMove.x > 0f))
@@ -346,29 +390,32 @@ public class PlayerController : MonoBehaviour
 
     public float mouseRoarRange = 5f;
     public float mouseRoarDamage = 30f;
+
     public void MouseRoar()
     {
         // Проверяем, доступен ли мышиный рык
-            if (hasMouseRoarAbility && Time.time >= mouseRoarCooldownTimer)
-            {
-                // Запускаем анимацию мышиного рыка
-                anim.SetTrigger("RoatGun");
+        if (hasMouseRoarAbility && Time.time >= mouseRoarCooldownTimer)
+        {
+            // Запускаем анимацию мышиного рыка
+            anim.SetTrigger("RoatGun");
 
-                // Проверяем, есть ли враги в пределах досягаемости
-                Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position, mouseRoarRange, LayerMask.GetMask("Enemies"));
-                foreach (Collider2D enemy in enemies)
-                {
-                    // Наносим урон всем найденным врагам
-                    enemy.GetComponent<EnemyScript>().TakeDamage(mouseRoarDamage);
-                }
-                hasMouseRoarAbility = false;
-                // Устанавливаем время следующего использования мышиного рыка
-                mouseRoarCooldownTimer = mouseRoarCooldown;
+            // Проверяем, есть ли враги в пределах досягаемости
+            Collider2D[] enemies =
+                Physics2D.OverlapCircleAll(transform.position, mouseRoarRange, LayerMask.GetMask("Enemies"));
+            foreach (Collider2D enemy in enemies)
+            {
+                // Наносим урон всем найденным врагам
+                enemy.GetComponent<EnemyScript>().TakeDamage(mouseRoarDamage);
             }
 
+            hasMouseRoarAbility = false;
+            // Устанавливаем время следующего использования мышиного рыка
+            mouseRoarCooldownTimer = mouseRoarCooldown;
+        }
+
     }
-    
-    
+
+
     private void RecoverStamina()
     {
         if (hpManager.currentStamina < hpManager.maxStamina)
@@ -377,14 +424,15 @@ public class PlayerController : MonoBehaviour
             hpManager.currentStamina = Mathf.Clamp(hpManager.currentStamina, 0, hpManager.maxStamina);
         }
     }
+
     public void TakeDamage(int damage)
     {
         AudioMG.instance.PlayPlayerSfx(2);
         anim.SetTrigger("hurt");
 
         // Рассчитываем фактический урон с учетом брони
-        float armorPercentage = (float)hpManager.armor / hpManager.maxArmor;
-        int actualDamage = Mathf.RoundToInt(damage * (1f - armorPercentage));
+        int damageReduction = Mathf.RoundToInt(hpManager.armor * damage / hpManager.maxArmor);
+        int actualDamage = Mathf.Max(damage - damageReduction, 1); // Гарантируем, что урон будет не менее 1
 
         HelthManager.currentHealth -= actualDamage;
 
@@ -398,7 +446,24 @@ public class PlayerController : MonoBehaviour
             uiController.SetHealth(HelthManager.currentHealth);
             uiController.UpdateArmor(); // Обновляем UI брони
         }
+
+        // Отбрасываем игрока назад
+        StartCoroutine(DisableMovementTemporarily(0.2f));
     }
+
+    // Корутина для временного отключения управления
+    private IEnumerator DisableMovementTemporarily(float duration)
+    {
+        // Отключаем управление
+        GetComponent<PlayerInput>().enabled = false;
+
+        // Ждем заданное время
+        yield return new WaitForSeconds(duration);
+
+        // Включаем управление
+        GetComponent<PlayerInput>().enabled = true;
+    }
+
     private void Die()
     {
         uiController.SetHealth(0);
@@ -407,32 +472,36 @@ public class PlayerController : MonoBehaviour
 
         //anim.SetTrigger("die"); // Активация анимации смерти
     }
+
     public void TriggerHurtAnimation()
     {
         anim.SetTrigger("hurt"); // Активация анимации получения урона
     }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("MouseRoar")) // Замените "MouseRoarPickup" на ваш тег
         {
             // Игрок коснулся предмета
-            
+
             mouseRoarItem = other.GetComponent<Pickup>().item; // Получите ссылку на компонент предмета
             hasMouseRoarAbility = true; // Установите флаг, указывающий, что у игрока есть способность
             AudioMG.instance.PlaySfx(0);
             Destroy(other.gameObject); // Удалите объект подбора из сцены
             // Добавьте здесь любую дополнительную логику, например, воспроизведение звука или обновление UI
         }
-        
-        
+
+
         if (other.CompareTag("Armor")) // Замените "Armor" на ваш тег
         {
             // Игрок коснулся предмета брони
-            hpManager.armor = Mathf.Min(hpManager.maxArmor, hpManager.armor + 100); // Увеличиваем броню на 10 единиц, но не более максимума
+            hpManager.armor =
+                Mathf.Min(hpManager.maxArmor,
+                    hpManager.armor + 100); // Увеличиваем броню на 10 единиц, но не более максимума
             AudioMG.instance.PlaySfx(1);
             Destroy(other.gameObject); // Удалите объект брони из сцены
             // Добавьте здесь любую дополнительную логику, например, воспроизведение звука или обновление UI
         }
     }
-    
+
 }

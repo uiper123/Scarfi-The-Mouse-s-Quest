@@ -5,11 +5,14 @@ using UnityEngine;
 [System.Serializable]
 public class SaveData
 {
-    public Vector2 playerPosition;
+    public Vector3 playerPosition;
     public int level;
-    public int maxHealth;
-    // Другие переменные состояния игры
-    public float currentHealth;
+    public string levelstr; // Или int level, если вы используете индексы уровней
+    public float maxHealth;
+    public int currentHealth;
     public float currentStamina;
-    public int armor;
+    public float armor;
+    public int currentCheckpointIndex;
+    public float mouseRoarCooldown;
+    
 }

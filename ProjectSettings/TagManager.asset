@@ -11,6 +11,7 @@ TagManager:
   - DamageDealer
   - MouseRoar
   - Armor
+  - StartMarker
   layers:
   - Default
   - TransparentFX

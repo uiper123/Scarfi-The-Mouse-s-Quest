@@ -7,6 +7,8 @@ using Random = UnityEngine.Random;
 
 public class EnemyScript : MonoBehaviour
 {
+
+    private Rigidbody2D bodyenemy;
     public float health = 100f;
     public GameObject player;
     public Animator animator;
@@ -33,6 +35,14 @@ public class EnemyScript : MonoBehaviour
     public AudioClip enemyDeathSfx;
     public float runSoundTimerEnemy = 0.5f;
     
+    
+    
+    
+    public float knockbackForce = 5f; // Сила отбрасывания
+    public float knockbackDuration = 0.2f; // Длительность отбрасывания
+    private bool isKnockedBack = false; // Флаг, указывающий на отбрасывание
+    private float knockbackTimer = 0f; // Таймер отбрасывания
+    
     private void OnDrawGizmos()
     {
         // Рисуем линию для левой границы
@@ -47,6 +57,17 @@ public class EnemyScript : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, detectionRange);
     }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            // Вычисляем направление отталкивания на основе положения игрока относительно врага
+            Vector3 knockbackDirection = (collision.transform.position - transform.position).normalized;
+            collision.gameObject.GetComponent<PlayerController>().Knockback(new Vector2(knockbackDirection.x, knockbackDirection.y));
+
+        }
+    }
+    
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
@@ -56,6 +77,7 @@ public class EnemyScript : MonoBehaviour
 
     private void Start()
     {
+        bodyenemy = GetComponent<Rigidbody2D>();
         groundLayer = LayerMask.GetMask("Platforms"); // Получаем слой земли
         SetRandomTargetPosition();
     
@@ -63,6 +85,7 @@ public class EnemyScript : MonoBehaviour
         enemyAudioSource = gameObject.AddComponent<AudioSource>();
         enemyAudioSource.outputAudioMixerGroup = AudioMG.instance.enemyMixerGroup; // Используйте группу микшера для врагов
     }
+    private bool isAtTargetPosition = false;
 
     private void Update()
     {
@@ -89,11 +112,37 @@ public class EnemyScript : MonoBehaviour
         else
         {
             isPlayerDetected = false;
-        
+
             // Остановка звука врага, если игрок вне поля зрения
             enemyAudioSource.Stop();
+
+            // Проверяем, достиг ли враг целевой позиции
+            if (isAtTargetPosition)
+            {
+                // Враг достиг целевой позиции, вызываем SetRandomTargetPosition()
+                SetRandomTargetPosition();
+                isAtTargetPosition = false;
+            }
+            else
+            {
+                // Враг еще не достиг целевой позиции, продолжаем движение
+                MoveToRandomPosition();
+
+                // Проверяем, достиг ли враг целевой позиции
+                if (Mathf.Abs(transform.position.x - targetPosition.x) < 0.1f)
+                {
+                    isAtTargetPosition = true;
+                }
+            }
+        }
         
-            MoveToRandomPosition();
+        if (isKnockedBack)
+        {
+            knockbackTimer -= Time.deltaTime;
+            if (knockbackTimer <= 0)
+            {
+                isKnockedBack = false;
+            }
         }
         CheckHealth();
     }
@@ -177,6 +226,13 @@ public class EnemyScript : MonoBehaviour
         animator.SetBool("_isMovingEnem", true);
     }
 
+    public void Knockback(Vector2 direction)
+    {
+        isKnockedBack = true;
+        knockbackTimer = knockbackDuration;
+        bodyenemy.velocity = direction * knockbackForce; // Заменяем bodyPlayer на соответствующий Rigidbody2D
+    }
+    
     public void TakeDamage(float amount)
     {
         health -= amount;
@@ -232,8 +288,15 @@ public class EnemyScript : MonoBehaviour
             {
                 // Игрок найден, наносим урон
                 hit.collider.GetComponent<PlayerController>().TakeDamage(attackDamage);
-            }
+                // Игрок найден, наносим урон и отталкиваем
+                PlayerController playerController = hit.collider.GetComponent<PlayerController>();
+                playerController.TakeDamage(attackDamage);
+                playerController.Knockback((playerController.transform.position - transform.position).normalized);
 
+                // Отбрасываем и самого врага
+                Knockback((transform.position - playerController.transform.position).normalized);
+            }
+            
             nextAttackTime = Time.time + 1f / attackRate;
         }
     }

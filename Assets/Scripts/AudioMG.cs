@@ -53,7 +53,7 @@ public class AudioMG : MonoBehaviour
             sfxSource.outputAudioMixerGroup = playerSfxMixerGroup;
         }
     }
-
+    
     private void Start()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
