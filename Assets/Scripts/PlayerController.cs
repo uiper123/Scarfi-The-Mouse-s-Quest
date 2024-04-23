@@ -308,7 +308,7 @@ public class PlayerController : MonoBehaviour
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Enemies"))
+        if (collision.gameObject.CompareTag("Enemy"))
         {
             EnemyScript enemy = collision.gameObject.GetComponent<EnemyScript>();
             Vector2 knockbackDirection = (transform.position - collision.gameObject.transform.position).normalized;
@@ -468,7 +468,7 @@ public class PlayerController : MonoBehaviour
     {
         uiController.SetHealth(0);
         GameMG.instance.GameOver();
-        PauseMn.menuButton.SetActive(false);
+       // PauseMn.menuButton.SetActive(false);
 
         //anim.SetTrigger("die"); // Активация анимации смерти
     }

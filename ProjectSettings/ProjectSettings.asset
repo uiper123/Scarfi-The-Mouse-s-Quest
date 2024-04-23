@@ -16,7 +16,7 @@ PlayerSettings:
   productName: My platformer
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
-  m_SplashScreenBackgroundColor: {r: 1, g: 0.30879685, b: 0, a: 1}
+  m_SplashScreenBackgroundColor: {r: 0.3445621, g: 0.38418144, b: 0.8207547, a: 1}
   m_ShowUnitySplashScreen: 1
   m_ShowUnitySplashLogo: 1
   m_SplashScreenOverlayOpacity: 0.5
@@ -40,7 +40,7 @@ PlayerSettings:
     width: 1
     height: 1
   m_SplashScreenLogos:
-  - logo: {fileID: 21300000, guid: a5240da7fff0bf34da21c7edff42b1d4, type: 3}
+  - logo: {fileID: 21300000, guid: f2b0cd00d9d704e4f8319555db8663e1, type: 3}
     duration: 2
   m_VirtualRealitySplashScreen: {fileID: 0}
   m_HolographicTrackingLossScreen: {fileID: 0}

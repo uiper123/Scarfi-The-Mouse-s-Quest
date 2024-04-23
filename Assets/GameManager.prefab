@@ -44,8 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09c71ba98debe344186276f6171264f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 8202866731090987886, guid: 1d4a6ce5b379b1741ae235bd47b9bd22, type: 3}
-  playerPrefab: {fileID: 5864138272898439719, guid: 1d4a6ce5b379b1741ae235bd47b9bd22,
-    type: 3}
   gameOverMenuUI: {fileID: 0}
-  playerSpawnPoint: {fileID: 0}
+  loadCheckpointButton: {fileID: 0}
+  Reatgun: {fileID: 0}
+  menuButton: {fileID: 0}

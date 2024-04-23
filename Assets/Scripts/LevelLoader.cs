@@ -2,10 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Scripts.SaveManager;
 
 public class LevelLoader : MonoBehaviour
 {
     public static LevelLoader Instance { get; private set; }
+    
 
     private void Awake()
     {
@@ -20,47 +22,38 @@ public class LevelLoader : MonoBehaviour
         }
     }
 
-    public void LoadLevel(string levelName, SaveData savedData = null)
+    public void LoadLevel(int levelIndex, SaveData savedData = null)
     {
-        StartCoroutine(LoadLevelAsync(levelName, savedData));
+        StartCoroutine(LoadLevelAsync(levelIndex, savedData));
     }
 
-    private IEnumerator LoadLevelAsync(string levelName, SaveData savedData)
+    private IEnumerator LoadLevelAsync(int levelIndex, SaveData savedData)
     {
-        // Загружаем сцену с загрузочным экраном
-        SceneManager.LoadSceneAsync("LoadingScreen");
-
-        // Ждем один кадр, чтобы загрузочный экран успел отобразиться
-        yield return null;
-
-        // Начинаем асинхронную загрузку уровня
-        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(levelName);
-
-        // Скрываем сцену, пока она загружается
-        asyncLoad.allowSceneActivation = false;
-
-        // Цикл обновления прогресса загрузки
-        while (!asyncLoad.isDone)
+        // Определяем сцену для загрузки
+        int levelToLoad;
+        if (savedData != null && savedData.level != 0)
         {
-            // Обновляем слайдер прогресса в загрузочном экране
-            float progress = Mathf.Clamp01(asyncLoad.progress / 0.9f);
-            LoadingScreenController.Instance.UpdateLoadingProgress(progress);
-
-            // Когда загрузка почти завершена, активируем сцену
-            if (progress >= 0.9f)
-            {
-                asyncLoad.allowSceneActivation = true;
-            }
-
-            yield return null;
+            levelToLoad = savedData.level;
+        }
+        else
+        {
+            levelToLoad = levelIndex;
         }
 
+        // Начинаем асинхронную загрузку уровня
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(levelToLoad, LoadSceneMode.Single);
+        
+        
+        // Ждем завершения загрузки
+        while (!asyncLoad.isDone)
+        {
+            yield return null;
+        }
+        
+        
         // Если есть сохраненные данные, восстанавливаем состояние игры
         if (savedData != null)
         {
-            // Загружаем уровень, на котором было последнее сохранение
-            SceneManager.LoadScene(savedData.level);
-
             // Получаем объект игрока и устанавливаем его позицию
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
@@ -91,5 +84,9 @@ public class LevelLoader : MonoBehaviour
         {
             Debug.LogWarning("No saved game data found.");
         }
+        
+        asyncLoad.allowSceneActivation = true;
+        // Воспроизводим музыку для загруженной сцены
+        AudioMG.instance.PlayMusicBySceneIndex(SceneManager.GetActiveScene().buildIndex);
     }
 }

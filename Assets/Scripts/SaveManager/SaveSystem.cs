@@ -2,22 +2,32 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public static class SaveSystem
+namespace Scripts.SaveManager
 {
-    public static void SaveProgress(SaveData data)
+    public static class SaveSystem
     {
-        string json = JsonUtility.ToJson(data);
-        PlayerPrefs.SetString("SaveData", json);
-        PlayerPrefs.Save();
-    }
-
-    public static SaveData LoadProgress()
-    {
-        if (PlayerPrefs.HasKey("SaveData"))
+        public static void SaveProgress(SaveData data)
         {
-            string json = PlayerPrefs.GetString("SaveData");
-            return JsonUtility.FromJson<SaveData>(json);
+            string json = JsonUtility.ToJson(data);
+            PlayerPrefs.SetString("SaveData", json);
+            PlayerPrefs.Save();
         }
-        return null; // Или возвращайте дефолтные значения
+
+        public static SaveData LoadProgress()
+        {
+            if (PlayerPrefs.HasKey("SaveData"))
+            {
+                string json = PlayerPrefs.GetString("SaveData");
+                return JsonUtility.FromJson<SaveData>(json);
+            }
+            return null; // Или возвращайте дефолтные значения
+        }
+        
+        public static void ResetProgress()
+        {
+            PlayerPrefs.DeleteKey("SaveData");
+            PlayerPrefs.Save();
+        }
     }
 }
+

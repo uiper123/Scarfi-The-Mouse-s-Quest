@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1168151621318130809}
   - component: {fileID: 634267698731758892}
-  - component: {fileID: 6087435958491126704}
   m_Layer: 0
   m_Name: LevelManager
   m_TagString: Untagged
@@ -52,15 +51,3 @@ MonoBehaviour:
   endMarker: {fileID: 0}
   levelBoundsMin: {x: -18.2, y: -12}
   levelBoundsMax: {x: 53.5, y: 26.18}
---- !u!114 &6087435958491126704
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1076649714683179981}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4771e0cf89fa514e8630777fd1c9dd0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

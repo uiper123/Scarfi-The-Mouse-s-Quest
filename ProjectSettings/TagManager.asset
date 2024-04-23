@@ -12,6 +12,7 @@ TagManager:
   - MouseRoar
   - Armor
   - StartMarker
+  - Enemy
   layers:
   - Default
   - TransparentFX

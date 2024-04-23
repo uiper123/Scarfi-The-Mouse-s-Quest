@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.InputSystem;
@@ -19,9 +16,9 @@ public class PauseMenu : MonoBehaviour
     public AudioMixer audioMixer;
 
     public Slider masterVolumeSlider;
+    public Slider musicVolumeSlider;
     public Slider sfxVolumeSlider;
     public Slider sfxVolumePlayerSlider;
-
 
     public GameObject player;
 
@@ -29,33 +26,33 @@ public class PauseMenu : MonoBehaviour
     {
         // Загрузка сохраненных значений громкости
         float masterVolume = PlayerPrefs.GetFloat("MasterVolume", 0.75f);
+        float musicVolume = PlayerPrefs.GetFloat("MusicVolume", 0.75f);
         float sfxVolume = PlayerPrefs.GetFloat("SfxVolume", 0.75f);
         float sfxPlayerVolume = PlayerPrefs.GetFloat("SfxPlayerVolume", 0.75f);
 
-
         masterVolumeSlider.value = masterVolume;
+        musicVolumeSlider.value = musicVolume;
         sfxVolumeSlider.value = sfxVolume;
         sfxVolumePlayerSlider.value = sfxPlayerVolume;
 
-        // Установка громкости в аудиомиксере непосредственно при старте
-        audioMixer.SetFloat("MusicVolume", Mathf.Log10(masterVolume) * 20);
-        audioMixer.SetFloat("SfxVolume", Mathf.Log10(sfxVolume) * 20);
-        audioMixer.SetFloat("SfxPlayerVolume", Mathf.Log10(sfxPlayerVolume) * 20);
-
+        // Установка громкости в аудио микшере при запуске
+        SetMasterVolume(masterVolume);
+        SetMusicVolume(musicVolume);
+        SetSFXVolume(sfxVolume);
+        SetSFXPlayerVolume(sfxPlayerVolume);
 
         // Добавление слушателей для слайдеров
-        masterVolumeSlider.onValueChanged.AddListener(delegate { SetMusicVolume(masterVolumeSlider.value); });
-        sfxVolumeSlider.onValueChanged.AddListener(delegate { SetSFXVolume(sfxVolumeSlider.value); });
-        sfxVolumePlayerSlider.onValueChanged.AddListener(delegate { SetSFXPlayerVolume(sfxVolumePlayerSlider.value); });
-
+        masterVolumeSlider.onValueChanged.AddListener(SetMasterVolume);
+        musicVolumeSlider.onValueChanged.AddListener(SetMusicVolume);
+        sfxVolumeSlider.onValueChanged.AddListener(SetSFXVolume);
+        sfxVolumePlayerSlider.onValueChanged.AddListener(SetSFXPlayerVolume);
     }
-
-   
 
     private void OnApplicationQuit()
     {
-        PlayerPrefs.Save(); // Убедитесь, что настройки сохраняются при выходе из игры
+        PlayerPrefs.Save(); // Сохранение настроек при выходе из игры
     }
+
     // Обработка нажатия кнопки паузы
     public void OnPauseGame(InputAction.CallbackContext context)
     {
@@ -89,8 +86,7 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 0f;
         pauseMenuUI.SetActive(true);
         menuButton.SetActive(false);
-        Reatgun.SetActive(false);
-        // Скрываем способность мышиного рыка
+        Reatgun.SetActive(false); // Скрываем способность мышиного рыка
         isPaused = true;
         UIController.isPaused = true;
     }
@@ -105,21 +101,31 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainWindow");
     }
+
+    // Методы для установки громкости
+    // Methods for setting volume
+    public void SetMasterVolume(float volume)
+    {
+        audioMixer.SetFloat("MasterVolume", volume <= 0.1f ? -80f : Mathf.Log10(volume) * 20);
+        PlayerPrefs.SetFloat("MasterVolume", volume);
+    }
+
     public void SetMusicVolume(float volume)
     {
-        audioMixer.SetFloat("MusicVolume", Mathf.Log10(volume) * 20);
-        PlayerPrefs.SetFloat("MusicVolume", volume); // Обновление сохраненной настройки громкости
+        audioMixer.SetFloat("MusicVolume", volume <= 0.1f ? -80f : Mathf.Log10(volume) * 20);
+        PlayerPrefs.SetFloat("MusicVolume", volume);
     }
 
     public void SetSFXVolume(float volume)
     {
-        audioMixer.SetFloat("SfxVolume", Mathf.Log10(volume) * 20);
-        PlayerPrefs.SetFloat("SfxVolume", volume); // Обновление сохраненной настройки громкости
+        audioMixer.SetFloat("SfxVolume", volume <= 0.1f ? -80f : Mathf.Log10(volume) * 20);
+        PlayerPrefs.SetFloat("SfxVolume", volume); 
     }
-    
+
     public void SetSFXPlayerVolume(float volume)
     {
-        audioMixer.SetFloat("SfxPlayerVolume", Mathf.Log10(volume) * 20);
-        PlayerPrefs.SetFloat("SfxPlayerVolume", volume); // Обновление сохраненной настройки громкости
+        audioMixer.SetFloat("SfxPlayerVolume", volume <= 0.1f ? -80f : Mathf.Log10(volume) * 20); 
+        PlayerPrefs.SetFloat("SfxPlayerVolume", volume); 
     }
+
 }

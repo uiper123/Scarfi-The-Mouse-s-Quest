@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using MoreMountains.CorgiEngine;
 using UnityEngine;
+using Scripts.SaveManager;
 using UnityEngine.SceneManagement;
 
 public class LevelManagers : MonoBehaviour
@@ -23,8 +24,8 @@ public class LevelManagers : MonoBehaviour
         if (instance == null)
         {
             instance = this;
+            DontDestroyOnLoad(gameObject); // Сохраняем GameObject между сценами
         }
-        
         else if (instance != this)
         {
             Destroy(gameObject);
@@ -43,9 +44,11 @@ public class LevelManagers : MonoBehaviour
 
     public void SpawnPlayer()
     {
+        
         // Проверяем текущую сцену, чтобы избежать спавна персонажа в основном меню
         if (SceneManager.GetActiveScene().name != "MainWindow")
         {
+            
             Vector3 spawnPosition;
             if (CheckpointExists(currentCheckpointIndex))
             {
@@ -65,6 +68,7 @@ public class LevelManagers : MonoBehaviour
             // Уничтожаем предыдущий объект персонажа, если он существует
             if (currentPlayerInstance != null)
             {
+                
                 Destroy(currentPlayerInstance);
             }
 
@@ -91,9 +95,14 @@ public class LevelManagers : MonoBehaviour
                 // Устанавливаем позицию игрока
                 currentPlayerInstance.transform.position = data.playerPosition;
                 // Устанавливаем остальные данные игрока (здоровье, выносливость, броню и т.д.)
-                //currentPlayerInstance.GetComponent<HelthManager>().currentHealth = data.currentHealth;
+               //currentPlayerInstance.GetComponent<HelthManager>().currentHealth = data.currentHealth;
                 currentPlayerInstance.GetComponent<HelthManager>().currentStamina = data.currentStamina;
                 currentPlayerInstance.GetComponent<HelthManager>().armor = (int)data.armor;
+                
+            }
+            if (data != null)
+            {
+                currentCheckpointIndex = data.currentCheckpointIndex;
             }
         }
     }
@@ -102,31 +111,12 @@ public class LevelManagers : MonoBehaviour
     {
         return index >= 0 && index < checkpointPositions.Length;
     }
-    public void LoadCheckpoint()
-    {
-        if (PlayerController.instance != null)
-        {
-            // Устанавливаем позицию игрока на последний чекпоинт
-            PlayerController.instance.SetPlayerPosition(checkpointPositions[currentCheckpointIndex].position);
-
-            // Восстанавливаем данные игрока из сохраненного чекпоина
-            SaveData data = SaveSystem.LoadProgress();
-            if (data != null)
-            {
-                // Устанавливаем здоровье, выносливость и броню игрока
-                //currentPlayerInstance.GetComponent<HelthManager>().currentHealth = data.currentHealth;
-                currentPlayerInstance.GetComponent<HelthManager>().currentStamina = data.currentStamina;
-                currentPlayerInstance.GetComponent<HelthManager>().armor = (int)data.armor;
-
-                // Восстанавливаем время перезарядки мышиного рыка
-                PlayerController.instance.mouseRoarCooldownTimer = data.mouseRoarCooldown;
-            }
-        }
-    }
+    
     public void SaveCheckpoint(int index)
     {
         SaveData data = new SaveData();
         data.playerPosition = currentPlayerInstance.transform.position;
+        data.levelstr = SceneManager.GetActiveScene().name; // Сохраняем имя сцены
         data.level = SceneManager.GetActiveScene().buildIndex;
 
         HelthManager healthManager = currentPlayerInstance.GetComponent<HelthManager>();

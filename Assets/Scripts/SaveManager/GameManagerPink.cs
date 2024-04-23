@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Scripts.SaveManager;
 using UnityEngine;
 
 public class GameManagerPink : MonoBehaviour
