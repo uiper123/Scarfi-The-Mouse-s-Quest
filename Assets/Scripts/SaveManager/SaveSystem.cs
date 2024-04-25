@@ -8,6 +8,7 @@ namespace Scripts.SaveManager
     {
         public static void SaveProgress(SaveData data)
         {
+            
             string json = JsonUtility.ToJson(data);
             PlayerPrefs.SetString("SaveData", json);
             PlayerPrefs.Save();
@@ -20,6 +21,7 @@ namespace Scripts.SaveManager
                 string json = PlayerPrefs.GetString("SaveData");
                 return JsonUtility.FromJson<SaveData>(json);
             }
+            
             return null; // Или возвращайте дефолтные значения
         }
         

@@ -50,20 +50,23 @@ MonoBehaviour:
     type: 2}
   sfxMixerGroup: {fileID: -3165942800488051908, guid: 7e984f512e89b60468e829489e8883e3,
     type: 2}
-  playerSfxMixerGroup: {fileID: 8439104177274333716, guid: 7e984f512e89b60468e829489e8883e3,
-    type: 2}
   musicSource: {fileID: 5552266560085665787}
   sfxSources: []
+  sfxAudioSource: {fileID: 0}
   sfxClips:
-  - {fileID: 8300000, guid: 48f9d51f49c3b404c9abf512372940cf, type: 3}
+  - {fileID: 8300000, guid: 6a4517fddc5ac6d49a7ebb94f101b535, type: 3}
+  - {fileID: 8300000, guid: 6a4517fddc5ac6d49a7ebb94f101b535, type: 3}
+  - {fileID: 8300000, guid: c67a7170556406645bd09cd6d6f16843, type: 3}
   playerSfxSources: []
   sceneMusicClips:
   - {fileID: 8300000, guid: e7d0d4ddaf8ac4845998df1feecceaa7, type: 3}
-  - {fileID: 8300000, guid: 46b693faf1547314bad29a83cb4beeea, type: 3}
+  - {fileID: 8300000, guid: c3d7c7295114ced44898bddab6d5f637, type: 3}
   playerSfx:
   - {fileID: 8300000, guid: ee0c9e1bb6793654e9a01ce30c6c2e9d, type: 3}
   - {fileID: 8300000, guid: 10529216ae6632a45a2ade1ca8f87633, type: 3}
-  - {fileID: 8300000, guid: fc6a8ed8f767ee7449dc2f51593060a7, type: 3}
+  - {fileID: 8300000, guid: dde7442777acb2e4dba872e4dfbcf85d, type: 3}
+  - {fileID: 8300000, guid: 7ee80f0461acd534a90a49556f875321, type: 3}
+  - {fileID: 8300000, guid: 0ab22c3f8ede56c41994942e84c445b3, type: 3}
   enemyMixerGroup: {fileID: 0}
   EnemySfx: {fileID: 0}
 --- !u!82 &5552266560085665787

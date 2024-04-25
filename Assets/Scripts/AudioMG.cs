@@ -12,10 +12,12 @@ public class AudioMG : MonoBehaviour
     public AudioMixerGroup masterMixer;
     public AudioMixerGroup musicMixerGroup;
     public AudioMixerGroup sfxMixerGroup;
-    public AudioMixerGroup playerSfxMixerGroup;
+    
 
     public AudioSource musicSource;
     public AudioSource[] sfxSources;
+    public AudioSource sfxAudioSource; // AudioSource для эффектов
+    private AudioSource dialogueAudioSource; // Новый AudioSource для диалогов
     public AudioClip[] sfxClips;
     public AudioSource[] playerSfxSources;
     public AudioClip[] sceneMusicClips;
@@ -50,13 +52,15 @@ public class AudioMG : MonoBehaviour
         // Назначение AudioMixerGroup для каждого AudioSource звуков персонажа
         foreach (AudioSource sfxSource in playerSfxSources)
         {
-            sfxSource.outputAudioMixerGroup = playerSfxMixerGroup;
+            sfxSource.outputAudioMixerGroup = sfxMixerGroup;
         }
     }
     
     private void Start()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
+        // Создаем новый AudioSource для воспроизведения диалогов
+        dialogueAudioSource = gameObject.AddComponent<AudioSource>();
     }
 
     private void InitializeAudioSourcesPool()
@@ -71,19 +75,33 @@ public class AudioMG : MonoBehaviour
             sfxSources[i].outputAudioMixerGroup = sfxMixerGroup;
         }
     }
+    public void PlayDialogueAudio(AudioClip clip)
+    {
+        // Устанавливаем громкость диалога в зависимости от громкости эффектов
+        dialogueAudioSource.volume = sfxAudioSource.volume;
+
+        // Воспроизводим аудиоклип диалога
+        dialogueAudioSource.clip = clip;
+        dialogueAudioSource.Play();
+    }
     
+    public bool IsDialogueAudioPlaying()
+    {
+        // Проверяем, воспроизводится ли аудиозапись диалога
+        return dialogueAudioSource.isPlaying;
+    }
     private void InitializePlayerAudioSourcesPool()
     {
-        // Инициализация пула звуковых эффектов игрока
-        playerSfxSources = new AudioSource[3]; // Пример размера пула для звуков игрока
+        playerSfxSources = new AudioSource[3];
         for (int i = 0; i < playerSfxSources.Length; i++)
         {
             GameObject obj = new GameObject("PlayerSFXSource_" + i);
             obj.transform.SetParent(transform);
             playerSfxSources[i] = obj.AddComponent<AudioSource>();
-            playerSfxSources[i].outputAudioMixerGroup = playerSfxMixerGroup;
+            playerSfxSources[i].outputAudioMixerGroup = sfxMixerGroup; // Изменение группы
         }
     }
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         PlayMusicBySceneIndex(scene.buildIndex);

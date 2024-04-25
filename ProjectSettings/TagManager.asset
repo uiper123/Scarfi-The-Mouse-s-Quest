@@ -13,6 +13,8 @@ TagManager:
   - Armor
   - StartMarker
   - Enemy
+  - DialogueTrigger
+  - Key
   layers:
   - Default
   - TransparentFX

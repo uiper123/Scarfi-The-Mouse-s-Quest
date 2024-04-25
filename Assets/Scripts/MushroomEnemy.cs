@@ -17,7 +17,8 @@ public class MushroomEnemy : MonoBehaviour
     private GameObject playerGameObject;
     private PlayerController playerController;
     public Animator animator;
-
+    
+    
     private bool isExploding = false;
     private bool isPlayerInRange = false;
     private bool isActive = false;
@@ -25,13 +26,18 @@ public class MushroomEnemy : MonoBehaviour
     
     private Collider2D enemyCollider;
     private Rigidbody2D enemyRigidbody;
-    private float nextActivationTime = 0f;
+    private float nextActivationTime = 3f;
     public float activationCooldown = 3f; // Время между активациями гриба
     private bool isPlayerInside = false;
     private bool wasPlayerInRangeBeforeActivation = false;
+    
+    public AudioClip explosionSound; // Звук взрыва
+    public AudioClip riseSound; // Звук вставания
+    AudioSource audioSource;
 
     private void Start()
     {
+        ScoreManager.instance.AddScore(0); // Инициализация отображения очков
         currentHealth = maxHealth;
         FindPlayer();
         animator.SetBool("IsActive", false); // Изначально враг неактивен
@@ -39,6 +45,7 @@ public class MushroomEnemy : MonoBehaviour
         enemyCollider = GetComponent<Collider2D>();
         enemyCollider.enabled = true; // Включаем коллайдер, чтобы игрок не мог пройти сквозь него
         enemyRigidbody = GetComponent<Rigidbody2D>();
+        audioSource = gameObject.AddComponent<AudioSource>();
     }
 
     private void Update()
@@ -93,6 +100,7 @@ public class MushroomEnemy : MonoBehaviour
     private IEnumerator ActivateEnemy()
     {
         animator.SetTrigger("Rise"); // Запускаем анимацию вставания гриба
+        audioSource.PlayOneShot(riseSound); // Воспроизведение звука вставания
         yield return new WaitForSeconds(delayBeforeActivation);
         MoveToPlayer();
     }
@@ -140,7 +148,7 @@ public class MushroomEnemy : MonoBehaviour
 
         // Проверка расстояния до игрока, если меньше взрывного радиуса, запускаем взрыв
         float distance = Vector2.Distance(transform.position, playerGameObject.transform.position);
-        if (distance <= explosionRange)
+        if (isPlayerInRange && distance <= explosionRange)
         {
             StartCoroutine(Explode());
         }
@@ -152,21 +160,40 @@ public class MushroomEnemy : MonoBehaviour
         {
             isExploding = true;
             animator.SetTrigger("Explode");
-
+            
             yield return new WaitForSeconds(explosionDelay);
+
+            AudioSource.PlayClipAtPoint(explosionSound, transform.position);
 
             // Нанесение урона игроку
             if (playerController != null)
             {
+                
                 playerController.TakeDamage(explosionDamage);
                 playerController.Knockback((playerController.transform.position - transform.position).normalized * knockbackForce);
+                ScoreManager.instance.AddScore(100); // Добавляем очки за убийство врага
             }
-
+            
             // Уничтожение врага
-            Destroy(gameObject);
+            DestroySelf();
         }
     }
 
+    private void DestroySelf()
+    {
+        gameObject.SetActive(false); // Отключаем гриб
+        Invoke("Respawn", 20f); // Вызываем респаун через 20 секунд
+    }
+
+    private void Respawn()
+    {
+        gameObject.SetActive(true); // Включаем гриб
+        currentHealth = maxHealth; // Восстанавливаем здоровье
+        isExploding = false; // Сбрасываем флаг взрыва
+        isActive = false; // Деактивируем гриба
+        animator.SetBool("IsActive", false); // Сбрасываем анимацию
+        // ... Добавьте здесь любой другой код для сброса состояния гриба ...
+    }
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
@@ -191,7 +218,7 @@ public class MushroomEnemy : MonoBehaviour
     private IEnumerator DeactivateIfPlayerStaysAway()
     {
         float timer = 0f;
-        while (!isPlayerInside && timer < deactivationDelay)
+        while (!isPlayerInside && !isPlayerInRange && timer < deactivationDelay)
         {
             timer += Time.deltaTime;
             yield return null;

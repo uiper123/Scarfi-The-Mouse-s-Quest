@@ -27,6 +27,7 @@ public class DestroyOnSceneChange : MonoBehaviour
         
         // Уничтожаем объект персонажа
         Destroy(gameObject);
+        GameMG.instance.gameOverMenuUI.SetActive(false);
     }
 
     private void OnDestroy()

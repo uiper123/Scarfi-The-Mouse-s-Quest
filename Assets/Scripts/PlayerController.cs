@@ -2,18 +2,25 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Update = UnityEngine.PlayerLoop.Update;
 
 
 public class PlayerController : MonoBehaviour
 {
 
-    public Item mouseRoarItem; // Ссылка на мышиный клык в инвентаре
-
+    public Item mouseRoarItem;
+    
+    
+    
+    private Inventory inventory; 
+    
     public static PlayerController instance = null;
     private Animator anim;
     private Vector3 currentPosition;
@@ -152,6 +159,8 @@ public class PlayerController : MonoBehaviour
         uiController.SetHealth(HelthManager.currentHealth);
 
     }
+    
+    
 
     [SerializeField] public float mouseRoarCooldown = 25f; // Время перезарядки мышиного рыка в секундах
     public float mouseRoarCooldownTimer = 0f; // Таймер для отслеживания перезарядки мышиного рыка
@@ -235,6 +244,7 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    
 
     private void Update()
     {
@@ -246,6 +256,7 @@ public class PlayerController : MonoBehaviour
 
         Flip();
 
+        
         if (transform.position.y < LevelManagers.instance.levelBoundsMin.y)
         {
             // Если персонаж вышел за нижнюю границу уровня, вызываем метод GameOver у GameMG
@@ -294,6 +305,7 @@ public class PlayerController : MonoBehaviour
         currentPosition = transform.position;
         uiController.SetStamina(hpManager.currentStamina);
         uiController.SetHealth(HelthManager.currentHealth);
+        uiController.UpdateArmor();
         RecoverStamina();
 
     }
@@ -398,7 +410,7 @@ public class PlayerController : MonoBehaviour
         {
             // Запускаем анимацию мышиного рыка
             anim.SetTrigger("RoatGun");
-
+            AudioMG.instance.PlayPlayerSfx(3);
             // Проверяем, есть ли враги в пределах досягаемости
             Collider2D[] enemies =
                 Physics2D.OverlapCircleAll(transform.position, mouseRoarRange, LayerMask.GetMask("Enemies"));
@@ -436,7 +448,7 @@ public class PlayerController : MonoBehaviour
 
         HelthManager.currentHealth -= actualDamage;
 
-        if (HelthManager.currentHealth <= 0)
+        if (HelthManager.currentHealth <= 0 && instance != null)
         {
             Die(); // Вызов метода смерти при нулевом здоровье
         }
@@ -467,6 +479,7 @@ public class PlayerController : MonoBehaviour
     private void Die()
     {
         uiController.SetHealth(0);
+        AudioMG.instance.PlayPlayerSfx(4);
         GameMG.instance.GameOver();
        // PauseMn.menuButton.SetActive(false);
 
@@ -478,6 +491,12 @@ public class PlayerController : MonoBehaviour
         anim.SetTrigger("hurt"); // Активация анимации получения урона
     }
 
+    public void UpdateHealth(float newHealth)
+    {
+        HelthManager.SetCurrentHealth(newHealth);
+        uiController.SetHealth(HelthManager.currentHealth);
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("MouseRoar")) // Замените "MouseRoarPickup" на ваш тег
@@ -487,21 +506,29 @@ public class PlayerController : MonoBehaviour
             mouseRoarItem = other.GetComponent<Pickup>().item; // Получите ссылку на компонент предмета
             hasMouseRoarAbility = true; // Установите флаг, указывающий, что у игрока есть способность
             AudioMG.instance.PlaySfx(0);
+            uiController.UpdateMouseRoarPanel(); // Обновить UI 
             Destroy(other.gameObject); // Удалите объект подбора из сцены
+            ScoreManager.instance.AddScore(1000); // Добавляем очки за подбор предмета
             // Добавьте здесь любую дополнительную логику, например, воспроизведение звука или обновление UI
         }
 
 
-        if (other.CompareTag("Armor")) // Замените "Armor" на ваш тег
+        if (other.CompareTag("Key"))
         {
-            // Игрок коснулся предмета брони
-            hpManager.armor =
-                Mathf.Min(hpManager.maxArmor,
-                    hpManager.armor + 100); // Увеличиваем броню на 10 единиц, но не более максимума
-            AudioMG.instance.PlaySfx(1);
-            Destroy(other.gameObject); // Удалите объект брони из сцены
-            // Добавьте здесь любую дополнительную логику, например, воспроизведение звука или обновление UI
+            Item item = other.GetComponent<Pickup>().item;
+            InventoryManager.instance.AddItemToInventory(item);  // Pass the tag for identification
+            Destroy(other.gameObject);
+            ScoreManager.instance.AddScore(5000);
         }
-    }
+        
 
+    }
+    
+    private void LevelComplete()
+    {
+        // Добавьте здесь код для завершения уровня, например:
+        Debug.Log("Уровень пройден!"); 
+        SceneManager.LoadScene("EndGameScene"); // Замените "EndGameScene" на имя вашей сцены завершения игры
+        // ... Можно загрузить следующую сцену, показать сообщение о победе и т.д. ... 
+    }
 }

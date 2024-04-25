@@ -36,7 +36,7 @@ public class EnemyScript : MonoBehaviour
     public float runSoundTimerEnemy = 0.5f;
     
     
-    
+    public float respawnTime = 20f; // Время респауна
     
     public float knockbackForce = 5f; // Сила отбрасывания
     public float knockbackDuration = 0.2f; // Длительность отбрасывания
@@ -77,6 +77,7 @@ public class EnemyScript : MonoBehaviour
 
     private void Start()
     {
+        ScoreManager.instance.AddScore(0); // Инициализация отображения очков
         bodyenemy = GetComponent<Rigidbody2D>();
         groundLayer = LayerMask.GetMask("Platforms"); // Получаем слой земли
         SetRandomTargetPosition();
@@ -255,13 +256,21 @@ public class EnemyScript : MonoBehaviour
     {
         if (!enemyAudioSource.isPlaying || enemyAudioSource.clip != enemyDeathSfx)
         {
+            ScoreManager.instance.AddScore(100); // Добавляем очки за убийство врага
             enemyAudioSource.clip = enemyDeathSfx;
             enemyAudioSource.Play();
         }
     
-        Destroy(gameObject);
+        gameObject.SetActive(false);
+        Invoke("Respawn", respawnTime);
     }
-
+    private void Respawn()
+    {
+        gameObject.SetActive(true);
+        float maxHealth = 100;
+        health = maxHealth; // Восстанавливаем здоровье
+        // ... Добавьте здесь любой другой код для сброса состояния врага ...
+    }
     private void CheckHealth()
     {
         if (health <= 0)

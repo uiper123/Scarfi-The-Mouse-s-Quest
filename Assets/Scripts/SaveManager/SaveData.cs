@@ -16,6 +16,10 @@ namespace Scripts.SaveManager
         public float armor;
         public int currentCheckpointIndex;
         public float mouseRoarCooldown;
+        
+        public List<string> collectedItems; // Список идентификаторов собранных предметов
+        public bool hasMouseRoar; // Флаг наличия способности мышиного рыка
+        public int score; // Счет игрока
     
         public SaveData()
         {
@@ -25,6 +29,9 @@ namespace Scripts.SaveManager
             armor = 0f;
             currentCheckpointIndex = 0;
             mouseRoarCooldown = 0f;
+             // Список идентификаторов собранных предметов
+            hasMouseRoar = false; // Флаг наличия способности мышиного рыка
+            score = 0; // Счет игрока
         }
     }
     

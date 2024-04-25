@@ -17,6 +17,9 @@ public class GameMG : MonoBehaviour
 
     public GameObject Reatgun;
     public GameObject menuButton;
+    public GameObject TExtScore;
+    public GameObject CountItem;
+
 
     private void Awake()
     {
@@ -41,11 +44,15 @@ public class GameMG : MonoBehaviour
         {
             // Удаляем персонажа при смерти
             Destroy(PlayerController.instance.gameObject);
+            UIController.Instance.mouseRoarPanel.SetActive(false); // Скрываем RoatGun в меню Game Over
+            gameOverMenuUI.SetActive(true);
+            menuButton.SetActive(false);
+            CountItem.SetActive(false);
+            TExtScore.SetActive(false);
+            Reatgun.gameObject.SetActive(false); // Отключаем отображение Reatgun
+            //Time.timeScale = 0;
         }
-        gameOverMenuUI.SetActive(true);
-        menuButton.SetActive(false);
-        Reatgun.gameObject.SetActive(false); // Отключаем отображение Reatgun
-        Time.timeScale = 0;
+        
     }
 
     public void RestartLevel()
@@ -53,10 +60,14 @@ public class GameMG : MonoBehaviour
         Time.timeScale = 1f;
         gameOverMenuUI.SetActive(false);
         menuButton.SetActive(true);
+        CountItem.SetActive(true);
+        TExtScore.SetActive(true);
+        gameOverMenuUI.SetActive(false);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 
         // Сбрасываем текущий чекпоинт и объект персонажа
         currentCheckpointIndex = 0;
+        UIController.Instance.ResetUI();
         PlayerController.instance = null;
 
         // Запускаем возрождение персонажа с задержкой
@@ -115,7 +126,9 @@ public class GameMG : MonoBehaviour
         if (scene.buildIndex != 0) 
         {
             // При загрузке игровой сцены вызываем SpawnPlayer()
+            gameOverMenuUI.SetActive(false);
             LevelManagers.instance.SpawnPlayer();
+            UIController.Instance.ResetUI(); // Сброс UI
         }
     }
 

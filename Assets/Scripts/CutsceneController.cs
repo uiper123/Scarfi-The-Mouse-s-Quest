@@ -23,6 +23,11 @@ public class CutsceneController : MonoBehaviour
     {
         // Воспроизводим Таймлайн
         director.Play();
+        HelthManager healthManager = PlayerController.instance.GetComponent<HelthManager>();
+        if (healthManager != null)
+        {
+            HelthManager.currentHealth = healthManager.maxHealth;
+        }
 
         // Скрываем экран загрузки
        

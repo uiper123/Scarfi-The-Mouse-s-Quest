@@ -18,7 +18,7 @@ public class PauseMenu : MonoBehaviour
     public Slider masterVolumeSlider;
     public Slider musicVolumeSlider;
     public Slider sfxVolumeSlider;
-    public Slider sfxVolumePlayerSlider;
+    
 
     public GameObject player;
 
@@ -33,19 +33,18 @@ public class PauseMenu : MonoBehaviour
         masterVolumeSlider.value = masterVolume;
         musicVolumeSlider.value = musicVolume;
         sfxVolumeSlider.value = sfxVolume;
-        sfxVolumePlayerSlider.value = sfxPlayerVolume;
+       
 
         // Установка громкости в аудио микшере при запуске
         SetMasterVolume(masterVolume);
         SetMusicVolume(musicVolume);
         SetSFXVolume(sfxVolume);
-        SetSFXPlayerVolume(sfxPlayerVolume);
 
         // Добавление слушателей для слайдеров
         masterVolumeSlider.onValueChanged.AddListener(SetMasterVolume);
         musicVolumeSlider.onValueChanged.AddListener(SetMusicVolume);
         sfxVolumeSlider.onValueChanged.AddListener(SetSFXVolume);
-        sfxVolumePlayerSlider.onValueChanged.AddListener(SetSFXPlayerVolume);
+        
     }
 
     private void OnApplicationQuit()
@@ -54,6 +53,23 @@ public class PauseMenu : MonoBehaviour
     }
 
     // Обработка нажатия кнопки паузы
+    
+    
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (isPaused)
+            {
+                Resume();
+            }
+            else
+            {
+                Pause();
+            }
+        }
+    }
+    
     public void OnPauseGame(InputAction.CallbackContext context)
     {
         if (context.started)
@@ -121,11 +137,6 @@ public class PauseMenu : MonoBehaviour
         audioMixer.SetFloat("SfxVolume", volume <= 0.1f ? -80f : Mathf.Log10(volume) * 20);
         PlayerPrefs.SetFloat("SfxVolume", volume); 
     }
-
-    public void SetSFXPlayerVolume(float volume)
-    {
-        audioMixer.SetFloat("SfxPlayerVolume", volume <= 0.1f ? -80f : Mathf.Log10(volume) * 20); 
-        PlayerPrefs.SetFloat("SfxPlayerVolume", volume); 
-    }
+    
 
 }

@@ -73,9 +73,21 @@ public class UIController : MonoBehaviour
     private void Update()
     {
         UpdateMouseRoarPanel();
-        UpdateArmor();
+        
     }
 
+    public Text scoreText;
+    public Text collectedItemsCountText;
+
+    public void SetScore(int score)
+    {
+        scoreText.text = $"Score: {score}";
+    }
+
+    public void ResetUI()
+    {
+        mouseRoarPanel.SetActive(false); // Скрыть RoatGun при перезагрузке
+    }
     
     // Методы для обновления слайдеров, которые будут вызываться из скрипта персонажа
 
@@ -104,6 +116,7 @@ public class UIController : MonoBehaviour
     }
     public void UpdateMouseRoarPanel()
     {
+        
         if (!isPaused)
         {
             if (playerController.mouseRoarItem != null)

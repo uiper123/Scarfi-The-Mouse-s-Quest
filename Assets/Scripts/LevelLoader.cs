@@ -86,6 +86,7 @@ public class LevelLoader : MonoBehaviour
         }
         
         asyncLoad.allowSceneActivation = true;
+        GameMG.instance.gameOverMenuUI.SetActive(false);
         // Воспроизводим музыку для загруженной сцены
         AudioMG.instance.PlayMusicBySceneIndex(SceneManager.GetActiveScene().buildIndex);
     }
